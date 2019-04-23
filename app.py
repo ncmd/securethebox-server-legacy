@@ -14,8 +14,8 @@ TODOS = {
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
-        command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "get", "all"]
-        # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
+        # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "get", "all"]
+        command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
         try:
             output = check_output(command, stderr=STDOUT).decode()
             success = True 

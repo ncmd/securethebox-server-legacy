@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
+import subprocess
 
 app = Flask(__name__)
 api = Api(app)
@@ -13,6 +14,7 @@ TODOS = {
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
+        subprocess.call('/app/vendor/google-cloud-sdk/bin/kubectl delete -f ./kubernetes-deployments/services/nginx.yml',shell=True)
         abort(404, message="Todo {} doesn't exist".format(todo_id))
 
 parser = reqparse.RequestParser()
@@ -23,7 +25,9 @@ parser.add_argument('task')
 # shows a single todo item and lets you delete a todo item
 class Todo(Resource):
     def get(self, todo_id):
+
         abort_if_todo_doesnt_exist(todo_id)
+
         return TODOS[todo_id]
 
     def delete(self, todo_id):

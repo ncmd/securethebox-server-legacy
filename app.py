@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_restful import reqparse, abort, Api, Resource
-import subprocess
+from subprocess import check_output, CalledProcessError, STDOUT
 
 app = Flask(__name__)
 api = Api(app)
@@ -14,12 +14,21 @@ TODOS = {
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
-        process = subprocess.Popen('ls',
-                            shell=True,
-                            stdout=subprocess.PIPE, 
-                            stderr=subprocess.PIPE)
-        out, err = process.communicate()
-        abort(404, message=str(process.returncode, out, err))
+        command = ["ls", "-l"]
+        try:
+            output = check_output(command, stderr=STDOUT).decode()
+            success = True 
+            abort(404, message=str(output))
+        except CalledProcessError as e:
+            output = e.output.decode()
+            success = False
+            abort(404, message=str(output))
+        # process = subprocess.Popen('/app/vendor/google-cloud-sdk/bin/kubectl delete -f /app/kubernetes-deployments/services/nginx.yml',
+        #                     shell=True,
+        #                     stdout=subprocess.PIPE, 
+        #                     stderr=subprocess.PIPE)
+        # out, err = process.communicate()
+        # abort(404, message=str(process.returncode, out, err))
 
 parser = reqparse.RequestParser()
 parser.add_argument('task')

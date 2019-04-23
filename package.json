@@ -9,7 +9,7 @@
     "gcloud1": "gcloud beta container --project \"securethebox\" clusters create \"us-west1-a\" --zone \"us-west1-a\" --no-enable-basic-auth --cluster-version \"1.12.7-gke.7\" --machine-type \"n1-standard-1\" --image-type \"COS\" --disk-type \"pd-standard\" --disk-size \"30\" --metadata disable-legacy-endpoints=true --scopes \"https://www.googleapis.com/auth/devstorage.read_only\",\"https://www.googleapis.com/auth/logging.write\",\"https://www.googleapis.com/auth/monitoring\",\"https://www.googleapis.com/auth/servicecontrol\",\"https://www.googleapis.com/auth/service.management.readonly\",\"https://www.googleapis.com/auth/trace.append\" --num-nodes \"3\" --enable-cloud-logging --enable-cloud-monitoring --enable-ip-alias --network \"projects/securethebox/global/networks/default\" --subnetwork \"projects/securethebox/regions/us-west1/subnetworks/default\" --default-max-pods-per-node \"9\" --addons HorizontalPodAutoscaling,HttpLoadBalancing --enable-autoupgrade --enable-autorepair",
     "gcloud2": "gcloud container clusters get-credentials \"us-west1-a\"",
     "gcloud3": "kubectl create clusterrolebinding your-user-cluster-admin-binding --clusterrole=cluster-admin --user=cchong.vise@gmail.com",
-    "gcloud4": "kubectl apply -f ./kubernetes/management/external-dns/rbac-external-dns.yml",
+    "gcloud4": "kubectl apply -f ./kubernetes-management/external-dns/rbac-external-dns.yml",
     "heroku": "run-s heroku0 heroku1 heroku2 heroku3 heroku4",
     "hh": "git add . ; git commit -m \"+t/-t\" ; git push ; git push heroku master",
     "heroku0": "cd /Users/charleschong/go/src/securethebox/securethebox-server ; heroku destroy stb-server --confirm stb-server ; heroku create stb-server ; git push heroku master",

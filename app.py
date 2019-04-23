@@ -14,7 +14,7 @@ TODOS = {
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
-        command = ["ls", "-l"]
+        command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
         try:
             output = check_output(command, stderr=STDOUT).decode()
             success = True 
@@ -23,7 +23,7 @@ def abort_if_todo_doesnt_exist(todo_id):
             output = e.output.decode()
             success = False
             abort(404, message=str(output))
-        # process = subprocess.Popen('/app/vendor/google-cloud-sdk/bin/kubectl delete -f /app/kubernetes-deployments/services/nginx.yml',
+        # process = subprocess.Popen('/app/vendor/google-cloud-sdk/bin/kubectl  /app/kubernetes-deployments/services/nginx.yml',
         #                     shell=True,
         #                     stdout=subprocess.PIPE, 
         #                     stderr=subprocess.PIPE)

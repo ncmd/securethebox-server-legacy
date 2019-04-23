@@ -14,7 +14,7 @@ TODOS = {
 
 def abort_if_todo_doesnt_exist(todo_id):
     if todo_id not in TODOS:
-        subprocess.call('/app/vendor/google-cloud-sdk/bin/kubectl delete -f ./kubernetes-deployments/services/nginx.yml',shell=True)
+        subprocess.call('/app/vendor/google-cloud-sdk/bin/kubectl delete -f /app/kubernetes-deployments/services/nginx.yml',shell=True)
         abort(404, message="Todo {} doesn't exist".format(todo_id))
 
 parser = reqparse.RequestParser()

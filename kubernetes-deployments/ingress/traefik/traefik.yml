@@ -17,9 +17,6 @@ data:
     [entryPoints]
       [entryPoints.dashboard]
         address = ":8080"
-        [entryPoints.dashboard.auth]
-          [entryPoints.dashboard.auth.basic]
-            users = ["admin:$apr1$xqVaeUIK$qIZRhjFalEEvrlBIBXXib."]
       [entryPoints.http]
         address = ":80"
           [entryPoints.http.redirect]
@@ -30,11 +27,5 @@ data:
 
     [api]
     entrypoint="dashboard"
-
-    [acme]
-    email = "acme@securethebox.us"
-    storage = "acme.json"
-    entryPoint = "https"
-    onHostRule = true
-      [acme.httpChallenge]
-      entryPoint = "http"
+    
+    [kubernetes]

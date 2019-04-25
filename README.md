@@ -84,13 +84,13 @@ heroku ps:exec -a stb-server /app/vendor/google-cloud-sdk/bin/kubectl apply -f .
 
 **Check DNS records created in CLOUD DNS**
 ```
-heroku ps:exec -a stb-server /app/vendor/google-cloud-sdk/bin/gcloud dns record-sets list \
+gcloud dns record-sets list \
     --zone "us-west1-a-securethebox-us" \
-    --name "nginx.us-west1-a.securethebox.us."
+    --name "traefik.us-west1-a.securethebox.us."
 ```
 **Check domain is resolvable**
 ```
-dig +short @ns-cloud-d1.googledomains.com. nginx.us-west1-a.securethebox.us.
+dig +short @ns-cloud-d1.googledomains.com. traefik.us-west1-a.securethebox.us.
 ```
 
 # Monitoring & Troubleshooting

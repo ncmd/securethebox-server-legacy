@@ -17,26 +17,26 @@ api = Api(app)
 #         abort(404, message=str(output))
 
 def generateKubernetesServicesYaml(serviceName, userName, clusterName):
-    print("Generating Yaml!")
+    print("Generating Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/{serviceName}/01_deployment.py {userName} {serviceName} {clusterName}"],shell=True).wait()
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/{serviceName}/02_service.py {userName} {serviceName} {clusterName}"],shell=True).wait()
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/{serviceName}/03_ingress.py {userName} {serviceName} {clusterName}"],shell=True).wait()
 
 def deleteKubernetesServicesYaml(serviceName, userName, clusterName):
-    print("Deleting Yaml!")
+    print("Deleting Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
 
 def manageKubernetesServicesPod(serviceName, userName, clusterName, action):
-    print("Action:", action)
+    print(action,"Services Pod",clusterName,serviceName,userName)
     subprocess.Popen([f"/app/vendor/google-cloud-sdk/bin/kubectl {action} -f /app/kubernetes-deployments/service/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"/app/vendor/google-cloud-sdk/bin/kubectl {action} -f /app/kubernetes-deployments/service/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"/app/vendor/google-cloud-sdk/bin/kubectl {action} -f /app/kubernetes-deployments/service/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
 
 def manageChallenge1(userName,clusterName, action):
+    print(action,"Challenge 1",clusterName,userName)
     if action == 'apply':
-        print("Deploy Challenge 1!")
         # 1. Generate Yaml Files
         generateKubernetesServicesYaml('nginx-modsecurity',userName,clusterName)
         generateKubernetesServicesYaml('juice-shop',userName,clusterName)
@@ -46,11 +46,10 @@ def manageChallenge1(userName,clusterName, action):
         manageKubernetesServicesPod('juice-shop', userName, clusterName, action)
         manageKubernetesServicesPod('splunk', userName, clusterName, action)
     elif action == 'destroy':
-        print("Deleting Challenge 1!")
         # 1. Destroy Service Pods
-        # manageKubernetesServicesPod('nginx-modsecurity', userName, clusterName, action)
-        # manageKubernetesServicesPod('juice-shop', userName, clusterName, action)
-        # manageKubernetesServicesPod('splunk', userName, clusterName, action)
+        manageKubernetesServicesPod('nginx-modsecurity', userName, clusterName, action)
+        manageKubernetesServicesPod('juice-shop', userName, clusterName, action)
+        manageKubernetesServicesPod('splunk', userName, clusterName, action)
         # 2. Delete Yaml Files
         deleteKubernetesServicesYaml('nginx-modsecurity',userName,clusterName)
         deleteKubernetesServicesYaml('juice-shop',userName,clusterName)
@@ -86,8 +85,6 @@ class Kubernetes(Resource):
             return args, 201
         except:
             return args, 404
-        
-        
 
 api.add_resource(Kubernetes, '/api/kubernetes/challenges/<challenge_id>')
 

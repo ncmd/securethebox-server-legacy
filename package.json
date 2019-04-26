@@ -4,7 +4,7 @@
   "description": "``` virtualenv venv virtualenv -p /Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7 venv source venv/bin/activate pip freeze > requirements.txt ```",
   "main": "index.js",
   "scripts": {
-    "commit": "git add . && git commit -m \"Deploy\" && git push",
+    "commit": "git add . && git commit -m \"Deploy\" && git push && heroku git:remote -a stb-server ; git add . ; git commit -m \"Deploy\" ; git push heroku master",
     "gg": "run-s gcloud0 gcloud2 gcloud3 gcloud4 gcloud5 gcloud6",
     "gcloud": "run-s gcloud0 gcloud1 gcloud2 gcloud3 gcloud4",
     "gcloudx": "echo y | gcloud container clusters delete \"us-west1-a\"",

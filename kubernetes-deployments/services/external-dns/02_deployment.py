@@ -1,28 +1,35 @@
+import sys
+
 def writeConfig(**kwargs):
     template = """
-    kind: Deployment
     apiVersion: extensions/v1beta1
+    kind: Deployment
     metadata:
-      name: {serviceName}
-      labels:
-        app: {serviceName}
+      name: external-dns
     spec:
-      replicas: 1
-      selector:
-        matchLabels:
-          app: {serviceName}
+      strategy:
+        type: Recreate
       template:
         metadata:
           labels:
-            app: {serviceName}
+            app: external-dns
         spec:
+          serviceAccountName: external-dns
           containers:
-          - name: {serviceName}
-            image: "{imageName}"
+          - name: external-dns
+            image: registry.opensource.zalan.do/teapot/external-dns:latest
+            args:
+            - --source=service
+            - --source=ingress
+            - --domain-filter={clusterName}.securethebox.us # will make ExternalDNS see only the hosted zones matching provided domain, omit to process all available hosted zones
+            - --provider=google
+            - --policy=upsert-only # would prevent ExternalDNS from deleting any records, omit to enable full synchronization
+            - --registry=txt
+            - --txt-owner-id=my-identifier
               """
 
-    with open('deployment.yml', 'w') as yfile:
+    with open('{clusterName}-deployment.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
-# usage:
-writeConfig(serviceName="serviceName",imageName="imageName")
+if __name__ == "__main__":
+  writeConfig(clusterName=str(sys.argv[1]))

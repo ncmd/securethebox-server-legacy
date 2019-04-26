@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_restful import reqparse, abort, Api, Resource
 from subprocess import check_output, CalledProcessError, STDOUT
 
@@ -30,22 +30,22 @@ Google Kubernetes Engine
 
 Kubernetes commands
 [POST] 
-/kubernetes/challenge/1/deploy - Deploy challenge #1 pods (traefik, waf, app, splunk)
+/kubernetes/challenges/1/deploy - Deploy challenge #1 pods (traefik, waf, app, splunk)
 - args=username, recaptcha token, auth2 token, jwt
 - should use a dynamic yml file when deploying
 [GET] 
-/kubernetes/challenge/1/status/pods - Check deployment status of pods/containers (every 5 seconds)
-/kubernetes/challenge/1/status/dns - Check status of dns records created (dig)
-/kubernetes/challenge/1/status/pods/ready - Confirm when they are ready (if ready, ready=true)
+/kubernetes/challenges/1/status/pods - Check deployment status of pods/containers (every 5 seconds)
+/kubernetes/challenges/1/status/dns - Check status of dns records created (dig)
+/kubernetes/challenges/1/status/pods/ready - Confirm when they are ready (if ready, ready=true)
 - args=username,jwt
 [GET] 
-/kubernetes/challenge/1/status/pods/links - Get urls of containers and present it to frontend
+/kubernetes/challenges/1/status/pods/links - Get urls of containers and present it to frontend
 - args=username,jwt
 [POST]
-/kubernetes/challenge/1/restart - Restart pod (destroy and redeploy)
+/kubernetes/challenges/1/restart - Restart pod (destroy and redeploy)
 - args=username,servicename,jwt
 [POST]
-/kubernetes/challenge/1/destroy - Destroy challenge 1: deletes challenge 1 pods ; args=username ; exec
+/kubernetes/challenges/1/destroy - Destroy challenge 1: deletes challenge 1 pods ; args=username ; exec
 - Delete pods after 2 hours
 - args=username,servicename,jwt
 
@@ -76,67 +76,130 @@ Sendgrid client
 app = Flask(__name__)
 api = Api(app)
 
-TODOS = {
-    'todo1': {'task': 'build an API'},
-    'todo2': {'task': '?????'},
-    'todo3': {'task': 'profit!'},
-}
+# TODOS = {
+#     'todo1': {'task': 'build an API'},
+#     'todo2': {'task': '?????'},
+#     'todo3': {'task': 'profit!'},
+# }
 
 
-def abort_if_todo_doesnt_exist(todo_id):
-    if todo_id not in TODOS:
-        # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "get", "all"]
-        command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
-        try:
-            output = check_output(command, stderr=STDOUT).decode()
-            success = True 
-            abort(404, message=str(output))
-        except CalledProcessError as e:
-            output = e.output.decode()
-            success = False
-            abort(404, message=str(output))
+# def abort_if_todo_doesnt_exist(todo_id):
+#     if todo_id not in TODOS:
+#         # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "get", "all"]
+#         command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
+#         try:
+#             output = check_output(command, stderr=STDOUT).decode()
+#             success = True 
+#             abort(404, message=str(output))
+#         except CalledProcessError as e:
+#             output = e.output.decode()
+#             success = False
+#             abort(404, message=str(output))
 
-parser = reqparse.RequestParser()
-parser.add_argument('task')
+
 
 
 # Todo
 # shows a single todo item and lets you delete a todo item
-class Todo(Resource):
-    def get(self, todo_id):
-        abort_if_todo_doesnt_exist(todo_id)
-        return TODOS[todo_id]
+# class Todo(Resource):
+#     def get(self, todo_id):
+#         abort_if_todo_doesnt_exist(todo_id)
+#         return TODOS[todo_id]
 
-    def delete(self, todo_id):
-        abort_if_todo_doesnt_exist(todo_id)
-        del TODOS[todo_id]
-        return '', 204
+#     def delete(self, todo_id):
+#         abort_if_todo_doesnt_exist(todo_id)
+#         del TODOS[todo_id]
+#         return '', 204
 
-    def put(self, todo_id):
-        args = parser.parse_args()
-        task = {'task': args['task']}
-        TODOS[todo_id] = task
-        return task, 201
+#     def put(self, todo_id):
+#         args = parser.parse_args()
+#         task = {'task': args['task']}
+#         TODOS[todo_id] = task
+#         return task, 201
 
 
 # TodoList
 # shows a list of all todos, and lets you POST to add new tasks
-class TodoList(Resource):
-    def get(self):
-        return TODOS
+# class TodoList(Resource):
+#     def get(self):
+#         return TODOS
 
-    def post(self):
+#     def post(self):
+#         args = parser.parse_args()
+#         todo_id = int(max(TODOS.keys()).lstrip('todo')) + 1
+#         todo_id = 'todo%i' % todo_id
+#         TODOS[todo_id] = {'task': args['task']}
+#         return TODOS[todo_id], 201
+
+parser = reqparse.RequestParser()
+parser.add_argument('action', choices=('deploy','destroy'), help='{error_msg}')
+parser.add_argument('username', help='{error_msg}')
+
+
+def commandTemplate(command):
+    # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f","/app/kubernetes-deployments/services/nginx.yml"]
+    try:
+        output = check_output(command, stderr=STDOUT).decode()
+        success = True 
+        abort(404, message=str(output))
+    except CalledProcessError as e:
+        output = e.output.decode()
+        success = False
+        abort(404, message=str(output))
+
+# Kubernetes API
+class Kubernetes(Resource):
+    # Deploy/Destroy Challenge Environment (Traefik)
+    # Arguments = action,username
+    # Should return urls of environment
+    def post(self, challenge_id):
         args = parser.parse_args()
-        todo_id = int(max(TODOS.keys()).lstrip('todo')) + 1
-        todo_id = 'todo%i' % todo_id
-        TODOS[todo_id] = {'task': args['task']}
-        return TODOS[todo_id], 201
+        funcListDeploy = [
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/01_permissions.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/02_cluster-role.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/03_config.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/04_deployment.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/05_service.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "apply", "-f" ,"/app/kubernetes-deployments/ingress/traefik/06_ingress.yml"])
+            ]
+        funcListDestroy = [
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/01_permissions.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/02_cluster-role.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/03_config.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/04_deployment.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/05_service.yml"]),
+            commandTemplate(["/app/vendor/google-cloud-sdk/bin/kubectl", "delete", "-f" ,"/app/kubernetes-deployments/ingress/traefik/06_ingress.yml"])
+            ]
+        if args['action'] == 'deploy':
+            # command = ["/app/vendor/google-cloud-sdk/bin/kubectl", "get", "all"]
+            for func in funcListDeploy:
+                try:
+                    func()
+                except ValueError: # Or whatever specific exception you want to handle...
+                    # Handle it...
+                    print("Error Occured")
+                    break
+        elif args['choices'] == 'destroy':
+             for func in funcListDestroy:
+                try:
+                    func()
+                except ValueError: # Or whatever specific exception you want to handle...
+                    # Handle it...
+                    print("Error Occured")
+                    break
+        return {'action': args['action']}, 201
+
+
+
+
 
 ##
 ## Actually setup the Api resource routing here
 ##
-api.add_resource(TodoList, '/todos')
-api.add_resource(Todo, '/todos/<todo_id>')
+# api.add_resource(TodoList, '/todos')
+# api.add_resource(Todo, '/todos/<todo_id>')
+
+api.add_resource(Kubernetes, '/kubernetes/challenges/<challenge_id>')
 
 if __name__ == '__main__':
     app.run(debug=True)

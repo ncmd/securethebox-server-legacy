@@ -5,10 +5,10 @@ def writeConfig(**kwargs):
     apiVersion: v1
     kind: Service
     metadata:
-      name: splunk-{userName}
+      name: {serviceName}-{userName}
     spec:
       selector:
-        app: splunk-{userName}
+        app: {serviceName}-{userName}
       ports:
       - name: http
         targetPort: 8000
@@ -18,9 +18,9 @@ def writeConfig(**kwargs):
         port: 8088
               """
 
-    with open('splunk-{userName}-service.yml', 'w') as yfile:
+    with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/02_'+str(sys.argv[3])+'-'+str(sys.argv[2])+'-'+str(sys.argv[1])+'-service.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 
 if __name__ == "__main__":
-  writeConfig(userName=str(sys.argv[1]))
+  writeConfig(userName=str(sys.argv[1]),serviceName=str(sys.argv[2]),clusterName=str(sys.argv[3]))

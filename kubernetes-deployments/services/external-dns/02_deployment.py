@@ -28,7 +28,7 @@ def writeConfig(**kwargs):
             - --txt-owner-id=my-identifier
               """
 
-    with open('{clusterName}-deployment.yml', 'w') as yfile:
+    with open('02_external-dns-{clusterName}-deployment.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 if __name__ == "__main__":

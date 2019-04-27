@@ -5,9 +5,6 @@ def writeConfig(**kwargs):
 user nginx nginx;
 worker_processes  1;
 load_module modules/ngx_http_modsecurity_module.so;
-events {
-    worker_connections  1024;
-}
 http {
     include       mime.types;
     default_type  application/octet-stream;
@@ -30,7 +27,7 @@ modsecurity_rules_file /etc/nginx/modsec/modsec_includes.conf;
             root   html;
         }
     }
-include /etc/nginx/conf.d/*.conf;configuration
+include /etc/nginx/conf.d/*.conf;
 }
               """
 

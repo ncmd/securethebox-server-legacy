@@ -5,7 +5,9 @@ from subprocess import check_output, STDOUT, CalledProcessError
 import time
 
 '''
-
+Need to fix 04_configuration.py
+Not parsing to write to file
+python3.7 ./kubernetes-deployments/services/nginx-modsecurity/04_configuration.py us-west1-a nginx-modsecurity oppa
 '''
 
 
@@ -68,24 +70,59 @@ def manageKubernetesServicesPod(clusterName, serviceName, userName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
 
-def setupNginx(clusterName, serviceName, userName):
-    print("setupNginx!!!",serviceName,userName)
+def generateNginxConfig(clusterName,serviceName,userName):
+    subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/{serviceName}/04_configuration.py {clusterName} {serviceName} {userName}"],shell=True).wait()
+    # python3.7 ./kubernetes-deployments/services/nginx-modsecurity/04_configuration.py us-west1-a nginx-modsecurity oppa
+
+# Install Nginx on Container/Pod
+def setupWAF(clusterName, serviceName, userName):
+    print("setupWAF!!!",serviceName,userName)
+    time.sleep(20)
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
     out = check_output(command)
     # List of online pods into a List
     pod_list = out.decode("utf-8").replace('\'','').splitlines()
 
-    userNginxPod = ''
+    pod_id = ''
     for i in pod_list:
         if f'{serviceName}-{userName}' in str(i):
             print(str(i))
-            userNginxPod = str(i)
-    print([f"kubectl cp ./kubernetes-deployments/services/{serviceName}/nginx.conf default/"+userNginxPod+":/etc/nginx/nginx.conf"])
-    subprocess.Popen([f"kubectl cp ./kubernetes-deployments/services/{serviceName}/04_{clusterName}-{serviceName}-{userName}-nginx.conf default/"+userNginxPod+":/etc/nginx/nginx.conf"],shell=True).wait()
-    subprocess.Popen([f"kubectl exec -it "+userNginxPod+" -- nginx -s reload"],shell=True).wait()
-    # kubectl exec -it nginx-modsecurity-oppa-6b7f54ff8-fxrcn -- /bin/sh
-    # kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/nginx.conf default/nginx-modsecurity-oppa-6b7f54ff8-fxrcn:/etc/nginx/nginx.conf
+            pod_id = str(i)
+    print([f"kubectl cp ./kubernetes-deployments/services/{serviceName}/nginx.conf default/"+pod_id+":/etc/nginx/nginx.conf"])
+    generateNginxConfig(clusterName,serviceName,userName)
+    subprocess.Popen([f"kubectl cp ./kubernetes-deployments/services/{serviceName}/04_{clusterName}-{serviceName}-{userName}-nginx.conf default/"+pod_id+":/etc/nginx/nginx.conf"],shell=True).wait()
+    subprocess.Popen([f"kubectl exec -it "+pod_id+" -- nginx -s reload"],shell=True).wait()
+    # kubectl exec -it nginx-modsecurity-oppa-6b7f54ff8-fszg6 -- /bin/sh
+    # kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/nginx.conf default/nginx-modsecurity-oppa-6b7f54ff8-fszg6:/etc/nginx/nginx.conf
+
+# Install Cloudcmd on Container/Pod
+def setupCLOUDCMD(clusterName, serviceName, userName):
+    print("setupCLOUDCMD!!!",clusterName,serviceName,userName)
+    time.sleep(20)
+    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
+    # Command Output
+    out = check_output(command)
+    # List of online pods into a List
+    pod_list = out.decode("utf-8").replace('\'','').splitlines()
+
+    pod_id = ''
+    for i in pod_list:
+        if f'{serviceName}-{userName}' in str(i):
+            print(str(i))
+            pod_id = str(i)
+
+    if serviceName == 'nginx-modsecurity':
+        subprocess.Popen([f"kubectl exec -it "+pod_id+" -- apk add nodejs nodejs-npm"],shell=True).wait()
+        subprocess.Popen([f"kubectl exec -it "+pod_id+" -- npm install -g cloudcmd forever"],shell=True).wait()
+        subprocess.Popen([f"kubectl exec -it "+pod_id+" -- forever start /usr/bin/cloudcmd --port 6000"],shell=True).wait()
+    elif serviceName == 'juice-shop':
+        subprocess.Popen([f"kubectl exec -it "+pod_id+" -- npm install -g cloudcmd forever"],shell=True).wait()
+        subprocess.Popen([f"kubectl exec -it "+pod_id+" -- forever start /usr/local/bin/cloudcmd --port 7000"],shell=True).wait()
+
+
+
+
 
 def manageChallenge1(clusterName, userName, action):
     print(action,"Challenge 1",clusterName,userName)
@@ -101,8 +138,13 @@ def manageChallenge1(clusterName, userName, action):
         generateKubernetesServicesYaml(clusterName, 'splunk',userName)
         # # 4. Deploy Service pods
         manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
+        setupWAF(clusterName, 'nginx-modsecurity', userName)
+        setupCLOUDCMD(clusterName, 'nginx-modsecurity', userName)
+
         manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        setupCLOUDCMD(clusterName, 'juice-shop', userName)
         manageKubernetesServicesPod(clusterName,'splunk', userName, action)
+
     elif action == 'delete':
         # 1. Delete Ingress Pods
         manageKubernetesIngressPod(clusterName,'traefik', action)
@@ -152,7 +194,7 @@ class Kubernetes(Resource):
     def get(self, challenge_id):
         args = parser.parse_args()
         try:
-            setupNginx(args['clusterName'],args['serviceName'],args['userName'])
+            setupWAF(args['clusterName'],args['serviceName'],args['userName'])
             return args, 201
         except:
             return args, 404

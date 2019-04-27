@@ -122,9 +122,11 @@ brew install nss mkcert
 sudo brew services start dnsmasq
 sudo killall -HUP mDNSResponder
 mkcert '*.securethebox.us'
+mkcert '*.us-west1-a.securethebox.us'
 mkcert -install
 kubectl -n default create secret tls traefik-tls-cert --key=_wildcard.securethebox.us-key.pem --cert=_wildcard.securethebox.us.pem
-
+kubectl -n default create secret tls traefik-tls-cert --key=_wildcard.us-west1-a.securethebox.us-key.pem --cert=_wildcard.us-west1-a.securethebox.us.pem
+kubectl -n default delete secret traefik-tls-cert
 
 sudo vi /usr/local/etc/dnsmasq.conf
 address=/us-west1-a.securethebox.us/127.0.0.1

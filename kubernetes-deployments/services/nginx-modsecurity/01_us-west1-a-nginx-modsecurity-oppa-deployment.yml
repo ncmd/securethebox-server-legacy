@@ -1,0 +1,23 @@
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-modsecurity-oppa
+  labels:
+    app: nginx-modsecurity-oppa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx-modsecurity-oppa
+  template:
+    metadata:
+      labels:
+        app: nginx-modsecurity-oppa
+    spec:
+      containers:
+      - name: nginx-modsecurity-oppa
+        image: "really/nginx-modsecurity:latest"
+        ports:
+        - containerPort: 80
+              

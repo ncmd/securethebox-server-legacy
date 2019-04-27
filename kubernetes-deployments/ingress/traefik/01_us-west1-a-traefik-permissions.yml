@@ -1,4 +1,4 @@
-# This is used to attach cluster-admin to the current kubectl account 
+
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -11,3 +11,4 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: User
   name: cchong.vise@gmail.com
+              

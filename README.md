@@ -114,4 +114,22 @@ gcloud config set compute/zone "us-west1-a"
 echo y | gcloud container clusters delete "us-west1-a"
 ```
 
-# Deleting DNS
+# Managing Local DNS with dnsmasq for Local Traefik Kubernetes
+https://medium.com/localz-engineering/kubernetes-traefik-locally-with-a-wildcard-certificate-e15219e5255d
+
+```
+brew install nss mkcert
+sudo brew services start dnsmasq
+sudo killall -HUP mDNSResponder
+mkcert '*.securethebox.us'
+mkcert -install
+kubectl -n default create secret tls traefik-tls-cert --key=_wildcard.securethebox.us-key.pem --cert=_wildcard.securethebox.us.pem
+
+
+sudo vi /usr/local/etc/dnsmasq.conf
+address=/us-west1-a.securethebox.us/127.0.0.1
+
+
+sudo vi /etc/resolver/dev
+dig securethebox.us @127.0.0.1
+```

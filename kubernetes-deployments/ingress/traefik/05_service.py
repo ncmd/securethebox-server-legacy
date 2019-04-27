@@ -2,31 +2,47 @@ import sys
 
 
 def writeConfig(**kwargs):
+    templateo = """
+kind: Service
+apiVersion: v1
+metadata:
+  name: traefik-ingress-controller
+spec:
+  selector:
+    app: traefik-ingress-controller
+  ports:
+    - port: 80
+      name: http
+    - port: 8080
+      name: admin
+  type: LoadBalancer
+    """
     template = """
-    kind: Service
-    apiVersion: v1
-    metadata:
-      name: traefik-{clusterName}-ingress-controller
-      annotations:
-        external-dns.alpha.kubernetes.io/hostname: traefik.{clusterName}.securethebox.us
-    spec:
-      selector:
-        app: traefik-{clusterName}-ingress-controller
-      ports:
-        - port: 80
-          name: http
-          targetPort: 8080
-        - port: 443
-          name: https
-          targetPort: 8080
-        - port: 8080
-          name: admin
-      type: LoadBalancer
+kind: Service
+apiVersion: v1
+metadata:
+  name: {serviceName}-{clusterName}-ingress-controller
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {serviceName}.{clusterName}.securethebox.us
+spec:
+  selector:
+    app: {serviceName}-{clusterName}-ingress-controller
+  ports:
+    - protocol: TCP
+      port: 443
+      name: https
+    - protocol: TCP
+      port: 80
+      name: http
+    - protocol: TCP
+      port: 8080
+      name: admin
+  type: LoadBalancer
               """
 
-    with open('05-traefik-{clusterName}-service.yml', 'w') as yfile:
+    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/05_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-service.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 
 if __name__ == "__main__":
-  writeConfig(clusterName=str(sys.argv[1]))
+  writeConfig(clusterName=str(sys.argv[1]),serviceName=str(sys.argv[2]))

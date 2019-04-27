@@ -21,6 +21,8 @@ def writeConfig(**kwargs):
           containers:
           - name: {serviceName}-{userName}
             image: splunk/splunk:latest
+            ports:
+            - containerPort: 8000
             env:
               - name: SPLUNK_START_ARGS
                 value: --accept-license
@@ -30,9 +32,9 @@ def writeConfig(**kwargs):
                 value: changeme
               """
 
-    with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[3])+'-'+str(sys.argv[2])+'-'+str(sys.argv[1])+'-deployment.yml', 'w') as yfile:
+    with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 
 if __name__ == "__main__":
-  writeConfig(userName=str(sys.argv[1]),serviceName=str(sys.argv[2]),clusterName=str(sys.argv[3]))
+  writeConfig(clusterName=str(sys.argv[1]),serviceName=str(sys.argv[2]),userName=str(sys.argv[3]))

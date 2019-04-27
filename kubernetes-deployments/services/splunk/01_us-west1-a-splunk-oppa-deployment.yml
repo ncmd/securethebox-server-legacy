@@ -1,0 +1,30 @@
+
+    kind: Deployment
+    apiVersion: extensions/v1beta1
+    metadata:
+      name: splunk-oppa
+      labels:
+        app: splunk-oppa
+    spec:
+      replicas: 1
+      selector:
+        matchLabels:
+          app: splunk-oppa
+      template:
+        metadata:
+          labels:
+            app: splunk-oppa
+        spec:
+          containers:
+          - name: splunk-oppa
+            image: splunk/splunk:latest
+            ports:
+            - containerPort: 8000
+            env:
+              - name: SPLUNK_START_ARGS
+                value: --accept-license
+              - name: SPLUNK_USER
+                value: root
+              - name: SPLUNK_PASSWORD
+                value: changeme
+              

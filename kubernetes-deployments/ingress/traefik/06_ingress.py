@@ -1,34 +1,53 @@
 import sys
 
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=traefik.securethebox.us"
+# kubectl -n kube-system create secret tls traefik-ui-tls-cert --key=tls.key --cert=tls.crt
 
 def writeConfig(**kwargs):
+    templateo = """
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik-ingress-controller
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    external-dns.alpha.kubernetes.io/target: traefik.securethebox.us
+spec:
+  tls:
+  - secretName: traefik-tls-cert
+  rules:
+    - host: traefik.securethebox.us
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: traefik-ingress-controller
+            servicePort: admin
+              """
     template = """
-    apiVersion: extensions/v1beta1
-    kind: Ingress
-    metadata:
-      name: traefik-{clusterName}-ingress-controller
-      namespace: default
-      annotations:
-        kubernetes.io/ingress.class: traefik
-        external-dns.alpha.kubernetes.io/target: traefik.{clusterName}.securethebox.us
-    spec:
-      tls:
-      - hosts:
-        - traefik.{clusterName}.securethebox.us
-        secretName: traefik-ui-tls-cert
-      rules:
-        - host: traefik.{clusterName}.securethebox.us
-          http:
-            paths:
-            - path: /
-              backend:
-                serviceName: traefik-{clusterName}-ingress-controller
-                servicePort: admin
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {serviceName}-{clusterName}-ingress-controller
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    external-dns.alpha.kubernetes.io/target: {serviceName}.{clusterName}.securethebox.us
+spec:
+  rules:
+    - host: {serviceName}.{clusterName}.securethebox.us
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: {serviceName}-{clusterName}-ingress-controller
+            servicePort: admin
               """
 
-    with open('06-traefik-{clusterName}-ingress.yml', 'w') as yfile:
+    with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/06_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-ingress.yml', 'w') as yfile:
         yfile.write(template.format(**kwargs))
 
 
 if __name__ == "__main__":
-  writeConfig(clusterName=str(sys.argv[1]))
+  writeConfig(clusterName=str(sys.argv[1]),serviceName=str(sys.argv[2]))

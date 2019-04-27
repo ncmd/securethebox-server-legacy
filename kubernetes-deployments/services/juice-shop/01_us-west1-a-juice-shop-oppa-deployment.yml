@@ -1,0 +1,23 @@
+
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: juice-shop-oppa
+  labels:
+    app: juice-shop-oppa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: juice-shop-oppa
+  template:
+    metadata:
+      labels:
+        app: juice-shop-oppa
+    spec:
+      containers:
+      - name: juice-shop-oppa
+        image: "bkimminich/juice-shop:latest"
+        ports:
+        - containerPort: 3000
+              

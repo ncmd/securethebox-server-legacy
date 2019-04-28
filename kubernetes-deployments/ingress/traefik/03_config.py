@@ -2,7 +2,7 @@ import sys
 
 
 def writeConfig(**kwargs):
-    template = """
+    templateo = """
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -10,13 +10,13 @@ metadata:
   namespace: default
 data:
   traefik.toml: |
-    # traefik.toml
     defaultEntryPoints = ["http"]
     [entryPoints]
       [entryPoints.http]
       address = ":80"
+    [kubernetes]
     """
-    templateo = """
+    template = """
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -28,11 +28,11 @@ data:
     [entryPoints]
       [entryPoints.http]
       address = ":80"
-        [entryPoints.http.redirect]
-          entryPoint = "https"
-      [entryPoints.https]
-      address = ":443"
-        [entryPoints.https.tls]
+      #   [entryPoints.http.redirect]
+      #     entryPoint = "https"
+      # [entryPoints.https]
+      # address = ":443"
+      #   [entryPoints.https.tls]
     [kubernetes]
               """
 

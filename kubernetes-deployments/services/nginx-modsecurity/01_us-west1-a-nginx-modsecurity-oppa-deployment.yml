@@ -15,9 +15,16 @@ spec:
       labels:
         app: nginx-modsecurity-oppa
     spec:
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
       containers:
       - name: nginx-modsecurity-oppa
         image: "really/nginx-modsecurity:latest"
         ports:
         - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/log/challenge1"
+            name: task-pv-storage
               

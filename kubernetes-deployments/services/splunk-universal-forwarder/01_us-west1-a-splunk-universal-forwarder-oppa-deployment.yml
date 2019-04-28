@@ -2,28 +2,27 @@
 kind: Deployment
 apiVersion: extensions/v1beta1
 metadata:
-  name: splunk-oppa
+  name: splunk-universal-forwarder-oppa
   labels:
-    app: splunk-oppa
+    app: splunk-universal-forwarder-oppa
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: splunk-oppa
+      app: splunk-universal-forwarder-oppa
   template:
     metadata:
       labels:
-        app: splunk-oppa
+        app: splunk-universal-forwarder-oppa
     spec:
       volumes:
         - name: task-pv-storage
           persistentVolumeClaim:
             claimName: task-pv-claim
       containers:
-      - name: splunk-oppa
-        image: splunk/splunk:latest
+      - name: splunk-universal-forwarder-oppa
+        image: splunk/universalforwarder:latest
         ports:
-        - containerPort: 8000
         - containerPort: 9997
         env:
           - name: SPLUNK_START_ARGS

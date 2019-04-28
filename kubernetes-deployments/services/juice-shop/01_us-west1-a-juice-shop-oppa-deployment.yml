@@ -15,9 +15,16 @@ spec:
       labels:
         app: juice-shop-oppa
     spec:
+      volumes:
+      - name: task-pv-storage
+        persistentVolumeClaim:
+          claimName: task-pv-claim
       containers:
       - name: juice-shop-oppa
         image: "bkimminich/juice-shop:latest"
         ports:
         - containerPort: 3000
+        volumeMounts:
+        - mountPath: "/var/log/challenge1"
+          name: task-pv-storage
               

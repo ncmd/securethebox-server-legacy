@@ -12,18 +12,16 @@ metadata:
   namespace: default
   annotations:
     kubernetes.io/ingress.class: traefik
-    external-dns.alpha.kubernetes.io/target: traefik.securethebox.us
+    external-dns.alpha.kubernetes.io/target: traefik.us-west1-a.securethebox.us
 spec:
-  tls:
-  - secretName: traefik-tls-cert
   rules:
-    - host: traefik.securethebox.us
+    - host: traefik.us-west1-a.securethebox.us
       http:
         paths:
         - path: /
           backend:
             serviceName: traefik-ingress-controller
-            servicePort: admin
+            servicePort: 8080
               """
     template = """
 apiVersion: extensions/v1beta1

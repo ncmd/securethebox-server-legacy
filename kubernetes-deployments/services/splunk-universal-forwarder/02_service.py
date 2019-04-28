@@ -11,9 +11,6 @@ spec:
     app: {serviceName}-{userName}
   ports:
   - name: http
-    targetPort: 8000
-    port: 80
-  - name: forwarder
     targetPort: 9997
     port: 9997
               """

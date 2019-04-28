@@ -18,11 +18,18 @@ spec:
       labels:
         app: {serviceName}-{userName}
     spec:
+      volumes:
+        - name: task-pv-storage
+          persistentVolumeClaim:
+            claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
         image: "really/nginx-modsecurity:latest"
         ports:
         - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/log/challenge1"
+            name: task-pv-storage
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:

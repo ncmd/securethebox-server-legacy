@@ -24,9 +24,8 @@ spec:
             claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
-        image: splunk/splunk:latest
+        image: splunk/universalforwarder:latest
         ports:
-        - containerPort: 8000
         - containerPort: 9997
         env:
           - name: SPLUNK_START_ARGS

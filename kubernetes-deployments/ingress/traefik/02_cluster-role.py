@@ -3,7 +3,7 @@ import sys
 
 def writeConfig(**kwargs):
     templateo = """
-    # create Traefik cluster role
+# create Traefik cluster role
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:

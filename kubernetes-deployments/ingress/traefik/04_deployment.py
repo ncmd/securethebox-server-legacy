@@ -22,7 +22,7 @@ spec:
             name: traefik-config
       containers:
       - name: traefik
-        image: "traefik:1.6"
+        image: "traefik:1.7.10-alpine"
         volumeMounts:
           - mountPath: "/etc/traefik/config"
             name: config

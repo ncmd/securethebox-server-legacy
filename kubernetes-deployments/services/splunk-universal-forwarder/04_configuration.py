@@ -7,7 +7,7 @@ def writeConfig(clusterName,serviceName,userName):
     copyfile('./kubernetes-deployments/services/splunk-universal-forwarder/template-inputs.conf', './kubernetes-deployments/services/splunk-universal-forwarder/04_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-inputs.conf')
     # Replace Line in file
     subprocess.Popen([f"sed '2s/nginx-userName/nginx-{userName}/' './kubernetes-deployments/services/splunk-universal-forwarder/template-inputs.conf' > ./kubernetes-deployments/services/splunk-universal-forwarder/04_"+str(sys.argv[1])+"-"+str(sys.argv[2])+"-"+str(sys.argv[3])+"-inputs.conf"],shell=True).wait()
-    subprocess.Popen([f"sed '5s/modsecurity-userName/modsecurity-{userName}/'' './kubernetes-deployments/services/splunk-universal-forwarder/template-inputs.conf' > ./kubernetes-deployments/services/splunk-universal-forwarder/04_"+str(sys.argv[1])+"-"+str(sys.argv[2])+"-"+str(sys.argv[3])+"-inputs.conf"],shell=True).wait()
+    subprocess.Popen([f"sed '5s/modsecurity-userName/modsecurity-{userName}/' './kubernetes-deployments/services/splunk-universal-forwarder/template-inputs.conf' > ./kubernetes-deployments/services/splunk-universal-forwarder/04_"+str(sys.argv[1])+"-"+str(sys.argv[2])+"-"+str(sys.argv[3])+"-inputs.conf"],shell=True).wait()
 
 # usage:    
 if __name__ == "__main__":

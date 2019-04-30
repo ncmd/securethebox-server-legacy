@@ -14,10 +14,6 @@ not getting updated...
 - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
 - kubectl port-forward splunk-oppa-7f7b975c4-m52x9 8000:8000
 
-2. Need setup persistent volume (done, but needs to be dynamic)
-
-3. Nginx logs, modsecurity logs, app logs, to save to Persistent Volume /var/logs/challenge1
-
 4. Splunk enable receiving (9997 is already enabled for receiving)
 - https://docs.splunk.com/Documentation/Forwarder/7.2.6/Forwarder/Enableareceiver
 kubectl exec -it splunk-oppa-7f7b975c4-l6wpx -- /bin/bash
@@ -189,6 +185,37 @@ def setupWAF(clusterName, serviceName, userName):
     # kubectl exec -it splunk-oppa-75fff68596-jbq46 -- /bin/sh
     # kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/nginx.conf default/nginx-modsecurity-oppa-6b7f54ff8-fszg6:/etc/nginx/nginx.conf
 
+def getPodId(serviceName, userName):
+    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
+    # Command Output
+    out = check_output(command)
+    # List of online pods into a List
+    pod_list = out.decode("utf-8").replace('\'','').splitlines()
+
+    pod_id = ''
+    findPod = True
+    counter = 0
+    while findPod:
+        print(f"Setup {serviceName} counter:",counter)
+        for i in pod_list:
+            if f'{serviceName}-{userName}' in str(i):
+                print("FOUND POD_ID:",str(i))
+                pod_id = str(i)
+                findPod=False
+        counter+=1
+    return pod_id
+
+def getContainerId(podId):
+    command = ["kubectl","describe","pod",podId]
+    command_output = check_output(command).split()
+    container_id = ''
+    for i in command_output:
+        # print(i)
+        if 'docker://' in str(i):
+            # print(i.decode("utf-8").replace('\'',''))
+            container_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
+    return container_id
+
 def splunkSetupSplunkAddons(clusterName,serviceName,userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
@@ -290,6 +317,9 @@ def setupSplunkLogging(clusterName,serviceName,userName):
 
         # 5. Restart splunk-universal-forwarder service
         subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk restart"],shell=True).wait()
+        
+        # 6. Clean up inputs files on host
+        deleteSplunkUniversalForwarderConfig(clusterName,"splunk-universal-forwarder",userName)
     except:
         print("Failed to setup Splunk Forwarder... retrying in 10 seconds")
         time.sleep(10)

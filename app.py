@@ -48,7 +48,7 @@ edit /opt/splunkforwarder/etc/system/local/inputs.conf
 sourcetype = nginx
 
 [monitor:///var/log/challenge1/modsecurity-oppa.log]
-sourcetype = modsecurity
+sourcetype = modsecurity    
 
 kubectl delete po,svc,deployment --all
 '''
@@ -135,9 +135,9 @@ def deleteSplunkUniversalForwarderConfig(clusterName,serviceName,userName):
 
 def deleteNginxConfig(clusterName,serviceName,userName):
     print("Deleting Nginx Config")
-    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-nginx.conf"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-nginx-2.conf"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-modsecurity.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-nginx.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-nginx-2.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-modsecurity.conf"],shell=True).wait()
     # python3.7 ./kubernetes-deployments/services/nginx-modsecurity/04_configuration.py us-west1-a nginx-modsecurity oppa
 
 # Install Nginx on Container/Pod
@@ -212,45 +212,21 @@ def getContainerId(podId):
     for i in command_output:
         # print(i)
         if 'docker://' in str(i):
-            # print(i.decode("utf-8").replace('\'',''))
+            print("FOUND CONTAINER_ID:",str(i))
             container_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
     return container_id
 
 def splunkSetupSplunkAddons(clusterName,serviceName,userName):
-    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
-    # Command Output
-    out = check_output(command)
-    # List of online pods into a List
-    pod_list = out.decode("utf-8").replace('\'','').splitlines()
-
-    pod_id = ''
-    findPod = True
-    counter = 0
-    while findPod:
-        print("Setup Splunk counter:",counter)
-        for i in pod_list:
-            if f'splunk-{userName}' in str(i):
-                print("FOUND POD_ID:",str(i))
-                pod_id = str(i)
-                findPod=False
-        counter+=1
-        # time.sleep(1)
+    pod_id = getPodId("splunk",userName)
     
     # 2. get container_id
-    ncommand = ["kubectl","describe","pod",pod_id]
-    nout = check_output(ncommand).split()
-    ncontainer_id = ''
-    for i in nout:
-        # print(i)
-        if 'docker://' in str(i):
-            # print(i.decode("utf-8").replace('\'',''))
-            ncontainer_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
+    container_id = getContainerId(pod_id)
     # 3. Copy inputs
-    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/modsecurity-add-on-for-splunk.tgz "+ncontainer_id+":/opt/splunk/etc/apps/"],shell=True).wait()
+    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/modsecurity-add-on-for-splunk.tgz "+container_id+":/opt/splunk/etc/apps/"],shell=True).wait()
     # Unpack tgz addon
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" tar xvzf /opt/splunk/etc/apps/modsecurity-add-on-for-splunk.tgz -C /opt/splunk/etc/apps"],shell=True).wait()
+    subprocess.Popen([f"docker exec -u root "+container_id+" tar xvzf /opt/splunk/etc/apps/modsecurity-add-on-for-splunk.tgz -C /opt/splunk/etc/apps"],shell=True).wait()
     # Restart splunk service
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
+    subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
 
 def setupSplunkLogging(clusterName,serviceName,userName):
     """
@@ -272,51 +248,27 @@ def setupSplunkLogging(clusterName,serviceName,userName):
     # 0. splunk enable listen 9997 -auth admin:Changeme
 
     # 1. get splunk-universal-forwarder pod_id
-    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
-    # Command Output
-    out = check_output(command)
-    # List of online pods into a List
-    pod_list = out.decode("utf-8").replace('\'','').splitlines()
-
-    pod_id = ''
-    findPod = True
-    counter = 0
-    while findPod:
-        print("Setup Splunk counter:",counter)
-        for i in pod_list:
-            if f'splunk-universal-forwarder-{userName}' in str(i):
-                print("FOUND POD_ID:",str(i))
-                pod_id = str(i)
-                findPod=False
-        counter+=1
-        # time.sleep(1)
+    pod_id = getPodId("splunk-universal-forwarder",userName)
     
     # 2. get container_id
-    ncommand = ["kubectl","describe","pod",pod_id]
-    nout = check_output(ncommand).split()
-    ncontainer_id = ''
-    for i in nout:
-        # print(i)
-        if 'docker://' in str(i):
-            # print(i.decode("utf-8").replace('\'',''))
-            ncontainer_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
+    container_id = getContainerId(pod_id)
     # 3. Copy inputs
-    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs.conf "+ncontainer_id+":/opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
+    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs.conf "+container_id+":/opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
     # docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_us-west1-a-splunk-universal-forwarder-oppa-inputs.conf 482a82302dfbc874d6baae8c12066c6bcc73ba25d8bda506f435ee1f942d96fc:/opt/splunkforwarder/etc/system/local/inputs.conf
     # Check file is copied
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" cat /opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
+    subprocess.Popen([f"docker exec -u root "+container_id+" cat /opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
     # docker exec -u root 482a82302dfbc874d6baae8c12066c6bcc73ba25d8bda506f435ee1f942d96fc cat /opt/splunkforwarder/etc/system/local/inputs.conf
     
     try:
         # 4. point Universal forwarder to splunk server
         # This command should show a FATAL error, its supposed to happend in order for splunk to login
-        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk search 'index=_internal | fields _time | head 1 ' -auth 'admin:Changeme'"],shell=True).wait()
-        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add forward-server splunk-"+userName+":9997"],shell=True).wait()
-        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/nginx-"+userName+".log"],shell=True).wait()
-        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/modsecurity-"+userName+".log"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunkforwarder/bin/splunk search 'index=_internal | fields _time | head 1 ' -auth 'admin:Changeme'"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunkforwarder/bin/splunk add forward-server splunk-"+userName+":9997"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/nginx-"+userName+".log"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/modsecurity-"+userName+".log"],shell=True).wait()
 
         # 5. Restart splunk-universal-forwarder service
-        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk restart"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunkforwarder/bin/splunk restart"],shell=True).wait()
         
         # 6. Clean up inputs files on host
         deleteSplunkUniversalForwarderConfig(clusterName,"splunk-universal-forwarder",userName)
@@ -328,24 +280,8 @@ def setupSplunkLogging(clusterName,serviceName,userName):
 # Install Cloudcmd on Container/Pod
 def setupCLOUDCMD(clusterName, serviceName, userName):
     print("setupCLOUDCMD!!!",clusterName,serviceName,userName)
-    # time.sleep(5)
-    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
-    # Command Output
-    out = check_output(command)
-    # List of online pods into a List
-    pod_list = out.decode("utf-8").replace('\'','').splitlines()
 
-    pod_id = ''
-    findPod = True
-    counter = 0
-    while findPod:
-        print(counter)
-        for i in pod_list:
-            if f'{serviceName}-{userName}' in str(i):
-                print(str(i))
-                pod_id = str(i)
-                findPod=False
-        counter+=1
+    pod_id = getPodId(serviceName,userName)
 
     if serviceName == 'nginx-modsecurity':
         subprocess.Popen([f"kubectl exec -it "+pod_id+" -- apk add nodejs nodejs-npm"],shell=True).wait()

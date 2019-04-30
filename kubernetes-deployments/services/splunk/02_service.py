@@ -12,7 +12,7 @@ spec:
   ports:
   - name: http
     targetPort: 8000
-    port: 80
+    port: 8000
   - name: forwarder
     targetPort: 9997
     port: 9997

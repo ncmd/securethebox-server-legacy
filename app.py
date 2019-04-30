@@ -5,6 +5,11 @@ from subprocess import check_output, STDOUT, CalledProcessError
 import time
 
 '''
+1. /opt/splunkforwarder/etc/system/local/inputs.conf
+not getting updated...
+
+2. need to fix time, timestamp is wrong...
+
 1. Splunk needs to work (it does, but needed portforwarding)
 - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
 - kubectl port-forward splunk-oppa-7f7b975c4-m52x9 8000:8000
@@ -15,7 +20,9 @@ import time
 
 4. Splunk enable receiving (9997 is already enabled for receiving)
 - https://docs.splunk.com/Documentation/Forwarder/7.2.6/Forwarder/Enableareceiver
-kubectl exec -it splunk-oppa-7f7b975c4-m52x9 -- /bin/bash
+kubectl exec -it splunk-oppa-7f7b975c4-l6wpx -- /bin/bash
+/opt/splunk/bin/splunk add monitor /var/log/challenge1/nginx-oppa.log
+/opt/splunk/bin/splunk add monitor /var/log/challenge1/modsecurity-oppa.log
 /opt/splunk/bin/splunk enable listen 9777 -auth admin:Changeme
 /opt/splunk/bin/splunk restart
 /opt/splunk/etc/system/local/inputs.conf
@@ -24,6 +31,8 @@ host = splunk-oppa-7f7b975c4-m52x9
 [splunktcp://9997]
 disabled = 0
 
+
+/opt/splunk/bin/splunk set web-port 80
 
 4. Splunk Universal Forwarder setup to parse Persistent Volume /var/logs/challenge1
 - https://docs.splunk.com/Documentation/Forwarder/7.2.6/Forwarder/HowtoforwarddatatoSplunkEnterprise
@@ -36,7 +45,7 @@ kubectl exec -it splunk-universal-forwarder-oppa-747d54cb-mkkc4 -- /bin/bash
 /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/nginx-oppa.log
 /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/modsecurity-oppa.log
 
-/opt/splunkforwarder/bin/splunk add monitor /var/log
+/opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1
 
 edit /opt/splunkforwarder/etc/system/local/inputs.conf
 [monitor:///var/log/challenge1/nginx-oppa.log]
@@ -44,12 +53,6 @@ sourcetype = nginx
 
 [monitor:///var/log/challenge1/modsecurity-oppa.log]
 sourcetype = modsecurity
-
-5. Install Splunk App
-cd $SPLUNK_HOME/bin
-./splunk stop
-tar xvzf /path/to/add-on.tgz -C $SPLUNK_HOME/etc/apps
-./splunk start
 
 kubectl delete po,svc,deployment --all
 '''
@@ -111,9 +114,10 @@ def manageKubernetesIngressPod(clusterName,serviceName, action):
 
 def manageKubernetesServicesPod(clusterName, serviceName, userName, action):
     print(action,"Service Pod:",serviceName)
-    subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()
-    time.sleep(10)
+    if action == 'apply':
+        subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
+        subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()
+    # time.sleep(10)
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
@@ -135,8 +139,9 @@ def deleteSplunkUniversalForwarderConfig(clusterName,serviceName,userName):
 
 def deleteNginxConfig(clusterName,serviceName,userName):
     print("Deleting Nginx Config")
-    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_nginx-modsecurity-{userName}-nginx.conf"],shell=True).wait()
-    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_nginx-modsecurity-{userName}-modsecurity.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-nginx.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-nginx-2.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/nginx-modsecurity/04_{serviceName}-{userName}-modsecurity.conf"],shell=True).wait()
     # python3.7 ./kubernetes-deployments/services/nginx-modsecurity/04_configuration.py us-west1-a nginx-modsecurity oppa
 
 # Install Nginx on Container/Pod
@@ -159,16 +164,14 @@ def setupWAF(clusterName, serviceName, userName):
                 pod_id = str(i)
                 findPod=False
         counter+=1
-        time.sleep(1)
-
-    # print([f"kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/template-nginx.conf default/"+pod_id+":/etc/nginx/nginx.conf"])
+        
     generateNginxConfig(clusterName,serviceName,userName)
     print("POD_ID:",pod_id)
     print("Sleeping 10 seconds for splunk service to load...")
     time.sleep(10)
     try:
         print("Copying nginx file to Pod")
-        subprocess.Popen([f"kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-nginx.conf default/"+pod_id+":/etc/nginx/nginx.conf"],shell=True).wait()
+        subprocess.Popen([f"kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-nginx-2.conf default/"+pod_id+":/etc/nginx/nginx.conf"],shell=True).wait()
         subprocess.Popen([f"kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/04_{clusterName}-{serviceName}-{userName}-modsecurity.conf default/"+pod_id+":/etc/nginx/modsec/modsecurity.conf"],shell=True).wait()
         print("Confirming nginx.conf and modsecurity.conf file copied...")
         subprocess.Popen([f"kubectl exec -it "+pod_id+" -- cat /etc/nginx/nginx.conf | grep "+serviceName+""],shell=True).wait()
@@ -186,6 +189,42 @@ def setupWAF(clusterName, serviceName, userName):
     # kubectl exec -it splunk-oppa-75fff68596-jbq46 -- /bin/sh
     # kubectl cp ./kubernetes-deployments/services/nginx-modsecurity/nginx.conf default/nginx-modsecurity-oppa-6b7f54ff8-fszg6:/etc/nginx/nginx.conf
 
+def splunkSetupSplunkAddons(clusterName,serviceName,userName):
+    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
+    # Command Output
+    out = check_output(command)
+    # List of online pods into a List
+    pod_list = out.decode("utf-8").replace('\'','').splitlines()
+
+    pod_id = ''
+    findPod = True
+    counter = 0
+    while findPod:
+        print("Setup Splunk counter:",counter)
+        for i in pod_list:
+            if f'splunk-{userName}' in str(i):
+                print("FOUND POD_ID:",str(i))
+                pod_id = str(i)
+                findPod=False
+        counter+=1
+        # time.sleep(1)
+    
+    # 2. get container_id
+    ncommand = ["kubectl","describe","pod",pod_id]
+    nout = check_output(ncommand).split()
+    ncontainer_id = ''
+    for i in nout:
+        # print(i)
+        if 'docker://' in str(i):
+            # print(i.decode("utf-8").replace('\'',''))
+            ncontainer_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
+    # 3. Copy inputs
+    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/modsecurity-add-on-for-splunk.tgz "+ncontainer_id+":/opt/splunk/etc/apps/"],shell=True).wait()
+    # Unpack tgz addon
+    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" tar xvzf /opt/splunk/etc/apps/modsecurity-add-on-for-splunk.tgz -C /opt/splunk/etc/apps"],shell=True).wait()
+    # Restart splunk service
+    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
+
 def setupSplunkLogging(clusterName,serviceName,userName):
     """
     0. enable splunk receving
@@ -198,6 +237,10 @@ def setupSplunkLogging(clusterName,serviceName,userName):
     kubectl describe pod splunk-universal-forwarder-oppa-747d54cb-wtlzg
     docker exec -u root 4c35ca0d76dccc84e93896d7c953da8bb119c08fbd4af50dc7842682198a41ef whoami
     """
+
+    generateSplunkUniversalForwarderConfig(clusterName,serviceName,userName)
+    print("Sleeping 30 Seconds for splunk to get ready")
+    time.sleep(30)
 
     # 0. splunk enable listen 9997 -auth admin:Changeme
 
@@ -219,7 +262,7 @@ def setupSplunkLogging(clusterName,serviceName,userName):
                 pod_id = str(i)
                 findPod=False
         counter+=1
-        time.sleep(1)
+        # time.sleep(1)
     
     # 2. get container_id
     ncommand = ["kubectl","describe","pod",pod_id]
@@ -232,21 +275,30 @@ def setupSplunkLogging(clusterName,serviceName,userName):
             ncontainer_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
     # 3. Copy inputs
     subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs.conf "+ncontainer_id+":/opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
+    # docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_us-west1-a-splunk-universal-forwarder-oppa-inputs.conf 482a82302dfbc874d6baae8c12066c6bcc73ba25d8bda506f435ee1f942d96fc:/opt/splunkforwarder/etc/system/local/inputs.conf
     # Check file is copied
     subprocess.Popen([f"docker exec -u root "+ncontainer_id+" cat /opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
+    # docker exec -u root 482a82302dfbc874d6baae8c12066c6bcc73ba25d8bda506f435ee1f942d96fc cat /opt/splunkforwarder/etc/system/local/inputs.conf
     
-    # 4. point Universal forwarder to splunk server
-    # This command should show a FATAL error, its supposed to happend in order for splunk to login
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+"  /opt/splunkforwarder/bin/splunk search 'index=_internal | fields _time | head 1 ' -auth 'admin:Changeme'"],shell=True).wait()
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+"  /opt/splunkforwarder/bin/splunk add forward-server splunk-oppa:9997"],shell=True).wait()
+    try:
+        # 4. point Universal forwarder to splunk server
+        # This command should show a FATAL error, its supposed to happend in order for splunk to login
+        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk search 'index=_internal | fields _time | head 1 ' -auth 'admin:Changeme'"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add forward-server splunk-"+userName+":9997"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/nginx-"+userName+".log"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk add monitor /var/log/challenge1/modsecurity-"+userName+".log"],shell=True).wait()
 
-    # 5. Restart splunk-universal-forwarder service
-    subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk restart"],shell=True).wait()
+        # 5. Restart splunk-universal-forwarder service
+        subprocess.Popen([f"docker exec -u root "+ncontainer_id+" /opt/splunkforwarder/bin/splunk restart"],shell=True).wait()
+    except:
+        print("Failed to setup Splunk Forwarder... retrying in 10 seconds")
+        time.sleep(10)
+        setupSplunkLogging(clusterName,serviceName,userName)
 
 # Install Cloudcmd on Container/Pod
 def setupCLOUDCMD(clusterName, serviceName, userName):
     print("setupCLOUDCMD!!!",clusterName,serviceName,userName)
-    time.sleep(5)
+    # time.sleep(5)
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
     out = check_output(command)
@@ -264,7 +316,6 @@ def setupCLOUDCMD(clusterName, serviceName, userName):
                 pod_id = str(i)
                 findPod=False
         counter+=1
-        time.sleep(1)
 
     if serviceName == 'nginx-modsecurity':
         subprocess.Popen([f"kubectl exec -it "+pod_id+" -- apk add nodejs nodejs-npm"],shell=True).wait()
@@ -282,7 +333,7 @@ def manageChallenge1(clusterName, userName, action):
         # 2. Deploy Ingress Pods
         manageKubernetesIngressPod(clusterName, 'traefik', action)
         # 3. Generate Yaml Service Files
-        time.sleep(20)
+        time.sleep(10)
         generateKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
         generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
         generateKubernetesServicesYaml(clusterName, 'splunk',userName)
@@ -291,7 +342,7 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
         manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
         manageKubernetesServicesPod(clusterName,'splunk', userName, action)
-        manageKubernetesServicesPod(clusterName, 'splunk-universal-forwarder',userName, action)
+        manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
 
         # print("WAF setup")
         setupWAF(clusterName, 'juice-shop', userName)
@@ -317,6 +368,8 @@ def manageChallenge1(clusterName, userName, action):
         deleteKubernetesServicesYaml(clusterName,'splunk',userName)
         deleteKubernetesServicesYaml(clusterName,'splunk-universal-forwarder',userName)
         # 5. Delete Persist Volumes
+        subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
+        subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
 
 parser = reqparse.RequestParser()
 parser.add_argument('action', choices=('apply','delete'), help='{error_msg}')
@@ -343,11 +396,14 @@ class Kubernetes(Resource):
         args = parser.parse_args()
         try:
             # setupWAF(args['clusterName'],'juice-shop',args['userName'])
-            setupSplunkLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
+            # setupSplunkLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
+            splunkSetupSplunkAddons(args['clusterName'],'splunk',args['userName'])
             return args, 201
         except:
             return args, 404
 
+
+# API Paths
 api.add_resource(Kubernetes, '/api/kubernetes/challenges/<challenge_id>')
 
 if __name__ == '__main__':

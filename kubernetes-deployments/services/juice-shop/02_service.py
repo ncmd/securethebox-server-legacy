@@ -13,6 +13,9 @@ spec:
   - name: http
     targetPort: 3000
     port: 80
+  - name: cloudcmd
+    targetPort: 9000
+    port: 9000
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/02_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-service.yml', 'w') as yfile:

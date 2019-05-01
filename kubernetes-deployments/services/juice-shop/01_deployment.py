@@ -27,6 +27,7 @@ spec:
         image: "bkimminich/juice-shop:latest"
         ports:
         - containerPort: 3000
+        - containerPort: 9000
         volumeMounts:
         - mountPath: "/var/log/challenge1"
           name: task-pv-storage

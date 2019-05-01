@@ -27,6 +27,7 @@ spec:
         image: "really/nginx-modsecurity:latest"
         ports:
         - containerPort: 80
+        - containerPort: 9000
         volumeMounts:
           - mountPath: "/var/log/challenge1"
             name: task-pv-storage

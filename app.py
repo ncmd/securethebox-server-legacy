@@ -1,11 +1,16 @@
 from flask import Flask, request
 from flask_restful import reqparse, abort, Api, Resource
+from flask_cors import CORS
 import subprocess
 from subprocess import check_output, STDOUT, CalledProcessError
 import time
 
+
 '''
-1. Need to setup Cloudcmd
+1. pvc needs to be unique per user
+2. pvc needs to be deleted 
+
+1. add wireshark https://hub.docker.com/r/ffeldhaus/wireshark
 
 2. need to fix time, timestamp is wrong...
 
@@ -13,12 +18,15 @@ import time
 - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
 - kubectl port-forward splunk-oppa-7f7b975c4-m52x9 8000:8000
 
+4. add attack server
+
+
 kubectl delete po,svc,deployment --all
 '''
 
 app = Flask(__name__)
 api = Api(app)
-
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 # def executeShellCommandWithStdout(command):
 #     print("Executing Shell Command!",command)
 #     try:
@@ -243,7 +251,7 @@ def setupSplunkLogging(clusterName,serviceName,userName):
 # Install Cloudcmd on Container/Pod
 def setupCLOUDCMD(clusterName, serviceName, userName):
     print("setupCLOUDCMD!!!",clusterName,serviceName,userName)
-    
+
     pod_id = getPodId(serviceName,userName)
     container_id = getContainerId(pod_id)
 
@@ -274,6 +282,7 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
         manageKubernetesServicesPod(clusterName,'splunk', userName, action)
         manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
+        # manageKubernetesServicesPod(clusterName,'wireshark',userName, action)
 
         print("WAF setup")
         setupWAF(clusterName, 'juice-shop', userName)
@@ -324,7 +333,7 @@ class Kubernetes(Resource):
         args = parser.parse_args()
         try:
             manageChallenge1(args['clusterName'],args['userName'],args['action'])
-            return args, 201
+            return args, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
         except:
             return args, 404
     

@@ -7,6 +7,17 @@ import time
 
 
 '''
+0. Setup Each user has its own "namespace" in kubernetes
+- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-organizing-with-namespaces
+0. Create Network Policies
+- https://kubernetes.io/docs/concepts/services-networking/network-policies/
+
+0. Automated checks to score user
+
+0. timer neesd to destroy environment after X time
+
+0. generate password for cloudcmd
+
 1. pvc needs to be unique per user
 2. pvc needs to be deleted 
 
@@ -16,7 +27,7 @@ import time
 
 3. Splunk port forwarding needs to work (it does, but needed portforwarding)
 - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
-- kubectl port-forward splunk-oppa-7f7b975c4-m52x9 8000:8000
+- kubectl port-forward splunk-oppa-7f7b975c4-hfhv7 8000:8000
 
 4. add attack server
 
@@ -101,6 +112,8 @@ def generateSplunkUniversalForwarderConfig(clusterName,serviceName,userName):
 def deleteSplunkUniversalForwarderConfig(clusterName,serviceName,userName):
     print("Deleting Splunk Universal Forwarder Config")
     subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs-2.conf"],shell=True).wait()
+    subprocess.Popen([f"rm -rf ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs-3.conf"],shell=True).wait()
     # python3.7 ./kubernetes-deployments/services/nginx-modsecurity/04_configuration.py us-west1-a nginx-modsecurity oppa
 
 
@@ -194,8 +207,10 @@ def splunkSetupSplunkAddons(clusterName,serviceName,userName):
     container_id = getContainerId(pod_id)
     # 3. Copy inputs
     subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/modsecurity-add-on-for-splunk.tgz "+container_id+":/opt/splunk/etc/apps/"],shell=True).wait()
+    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/suricata-add-on-for-splunk.tgz "+container_id+":/opt/splunk/etc/apps/"],shell=True).wait()
     # Unpack tgz addon
     subprocess.Popen([f"docker exec -u root "+container_id+" tar xvzf /opt/splunk/etc/apps/modsecurity-add-on-for-splunk.tgz -C /opt/splunk/etc/apps"],shell=True).wait()
+    subprocess.Popen([f"docker exec -u root "+container_id+" tar xvzf /opt/splunk/etc/apps/suricata-add-on-for-splunk.tgz -C /opt/splunk/etc/apps"],shell=True).wait()
     # Restart splunk service
     subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
 

@@ -4,9 +4,15 @@ from flask_cors import CORS
 import subprocess
 from subprocess import check_output, STDOUT, CalledProcessError
 import time
-
+import json
 
 '''
+0. Generating Answers
+- attacker_ip_address
+- 
+
+0. Install Codebox to edit code
+
 0. Setup Each user has its own "namespace" in kubernetes
 - https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-organizing-with-namespaces
 0. Create Network Policies
@@ -331,12 +337,6 @@ def manageChallenge1(clusterName, userName, action):
         # 6. Clean up the rest of environment (note this will close everything... do not do this in production)
         subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment --all"],shell=True)
 
-parser = reqparse.RequestParser()
-parser.add_argument('action', choices=('apply','delete'), help='{error_msg}')
-parser.add_argument('userName', help='{error_msg}')
-parser.add_argument('clusterName', choices=('us-west1-a'), help='{error_msg}')
-parser.add_argument('serviceName', help='{error_msg}')
-
 # Kubernetes API
 class Kubernetes(Resource):
     '''
@@ -345,7 +345,7 @@ class Kubernetes(Resource):
     PAYLOAD:    { action: deploy | delete }
     '''
     def post(self, challenge_id):
-        args = parser.parse_args()
+        args = kubernetes_parser.parse_args()
         try:
             manageChallenge1(args['clusterName'],args['userName'],args['action'])
             return args, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
@@ -353,7 +353,7 @@ class Kubernetes(Resource):
             return args, 404
     
     def get(self, challenge_id):
-        args = parser.parse_args()
+        args = kubernetes_parser.parse_args()
         try:
             # setupWAF(args['clusterName'],'juice-shop',args['userName'])
             # setupSplunkLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
@@ -364,9 +364,53 @@ class Kubernetes(Resource):
         except:
             return args, 404
 
+# Check answer according to challengeNumber & questionNumber
+def checkAnswer(challengeNumber, questionNumber):
+    print("The answer is ....")
+
+# Create a record for question for challengeNumber
+def createQuestion(challengeNumber, questionNumber, answer):
+    print('Created question and answer')
+    """
+    solutions/solution_id
+    - challenge_1: { question1:'',answer1:''}
+    """
+
+# Takes in the submission for Challenge1
+# def submissionChallenge1(challengeNumber, userName, solutionData):
+def submissionChallenge1(solutions):
+    print("SOLUTION:",solutions)
+    for i in solutions:
+        print(i,solutions[i])
+
+# Kubernetes API
+class Solutions(Resource):
+    '''
+    REQUEST:    POST
+    URI:        https://securethebox.us/api/kubernetes/challenges/1
+    PAYLOAD:    { action: deploy | delete }
+    '''
+    def post(self, challenge_id):
+        # args = solutions_parser.parse_args()
+        try:
+            json_data = request.get_json(force=True)
+            submissionChallenge1(json_data)
+            return "success", 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
+        except:
+            return "error", 404
+    
+kubernetes_parser = reqparse.RequestParser()
+kubernetes_parser.add_argument('action', choices=('apply','delete'), help='{error_msg}')
+kubernetes_parser.add_argument('userName', help='{error_msg}')
+kubernetes_parser.add_argument('clusterName', choices=('us-west1-a'), help='{error_msg}')
+kubernetes_parser.add_argument('serviceName', help='{error_msg}')
+
+solutions_parser = reqparse.RequestParser()
+solutions_parser.add_argument('solutionData', help='{error_msg}')
 
 # API Paths
 api.add_resource(Kubernetes, '/api/kubernetes/challenges/<challenge_id>')
+api.add_resource(Solutions, '/api/solutions/challenges/<challenge_id>')
 
 if __name__ == '__main__':
     app.run(debug=True)

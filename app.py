@@ -7,33 +7,40 @@ import time
 import json
 
 '''
-0. Generating Answers
-- attacker_ip_address
-- 
+TODO:
+- get status of pod
+    - kubectl get pod --field-selector=status.phase=Succeeded
 
-0. Install Codebox to edit code
+- Splunk port forwarding needs to work (it does, but needed portforwarding)
+    - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
+    - kubectl port-forward splunk-oppa-7f7b975c4-hfhv7 8000:8000
 
-0. Setup Each user has its own "namespace" in kubernetes
-- https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-organizing-with-namespaces
-0. Create Network Policies
-- https://kubernetes.io/docs/concepts/services-networking/network-policies/
+- Generating Answers
+    - attacker_ip_address
+    - perform sqli/xss
 
-0. Automated checks to score user
+- Install Codebox to edit code
+    - make it easier to edit code
 
-0. timer neesd to destroy environment after X time
+-  Setup Each user has its own "namespace" in kubernetes
+    - https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-organizing-with-namespaces
 
-0. generate password for cloudcmd
+- Create Network Policies
+    - https://kubernetes.io/docs/concepts/services-networking/network-policies/
+
+- Automated checks to score user
+    - Check if service is running
+
+- Timer need to destroy environment after X time
+    - After 2hrs
+
+- Generate password for cloudcmd
 
 1. pvc needs to be unique per user
 2. pvc needs to be deleted 
 
 1. add wireshark https://hub.docker.com/r/ffeldhaus/wireshark
-
-2. need to fix time, timestamp is wrong...
-
-3. Splunk port forwarding needs to work (it does, but needed portforwarding)
-- https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
-- kubectl port-forward splunk-oppa-7f7b975c4-hfhv7 8000:8000
+2. need to fix time, timestamp for logs is wrong...
 
 4. add attack server
 
@@ -43,7 +50,7 @@ kubectl delete po,svc,deployment --all
 
 app = Flask(__name__)
 api = Api(app)
-cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 # def executeShellCommandWithStdout(command):
 #     print("Executing Shell Command!",command)
 #     try:
@@ -194,6 +201,22 @@ def getPodId(serviceName, userName):
                 print("FOUND POD_ID:",pod_id)
         counter+=1
     return pod_id
+
+def getPodStatus(podId):
+    command = ["kubectl","get","pod",podId,"-o","json"]
+    command_output = check_output(command)
+    parsedJSON = json.loads(command_output)
+    currentState = parsedJSON["status"]["containerStatuses"][0]["state"]
+    # print(parsedJSON["status"]["containerStatuses"][0]["state"])
+    for i in currentState:
+        print("Key:",i)
+        if i == "running":
+            return True
+        elif i != "running":
+            return False
+        
+    
+    
 
 def getContainerId(podId):
     command = ["kubectl","describe","pod",podId]
@@ -358,11 +381,16 @@ class Kubernetes(Resource):
             # setupWAF(args['clusterName'],'juice-shop',args['userName'])
             # setupSplunkLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
             # splunkSetupSplunkAddons(args['clusterName'],'splunk',args['userName'])
-            setupCLOUDCMD(args['clusterName'], 'nginx-modsecurity', args['userName'])
-            setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])
-            return args, 201
+            # setupCLOUDCMD(args['clusterName'], 'nginx-modsecurity', args['userName'])
+            # setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])
+            podId = getPodId(args['serviceName'],args['userName'])
+            podStatus = getPodStatus(podId)
+            
+            return podStatus, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"}
         except:
             return args, 404
+
+
 
 # Check answer according to challengeNumber & questionNumber
 def checkAnswer(challengeNumber, questionNumber):

@@ -135,3 +135,97 @@ address=/us-west1-a.securethebox.us/127.0.0.1
 sudo vi /etc/resolver/dev
 dig securethebox.us @127.0.0.1
 ```
+
+**Traefik Setup**
+- https://www.digitalocean.com/community/tutorials/how-to-use-traefik-as-a-reverse-proxy-for-docker-containers-on-ubuntu-18-04
+```
+docker network create challenge1
+touch acme.json
+chmod 600 acme.json
+docker run -d \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v $PWD/traefik.toml:/traefik.toml \
+  -v $PWD/acme.json:/acme.json \
+  -p 80:80 \
+  -p 443:443 \
+  -l traefik.frontend.rule=Host:monitor.securethebox.us \
+  -l traefik.port=8080 \
+  --network challenge1 \
+  --name traefik \
+  traefik:1.7.10-alpine
+```
+
+**Getting shell of docker container:**
+```
+docker exec -it c71a87c88a1e /bin/bash
+docker exec -it securethebox-challenge_nginx-modsecurity_1 /bin/sh
+```
+
+**Installing and Starting Cloudcmd on Alpine:**
+```
+docker exec -u root -it dcdd24377a97 npm install -g cloudcmd && cloudcmd --port 7000 --no-open
+docker exec -u root -it dcdd24377a97 which cloudcmd
+/usr/local/bin/cloudcmd
+docker exec -u root -it dcdd24377a97 npm install -g forever
+docker exec -u root -it dcdd24377a97 forever start /usr/local/bin/cloudcmd
+```
+
+**Open a new port 8080:8080 on Container container_id_01**
+```
+docker stop container_id_01
+docker commit container_id_01 container_id_02
+docker run -p 8080:8080 -td container_id_02
+```
+
+**Getting Network information of container:**
+```
+docker inspect container_id_here | grep IPAddressdocker
+```
+
+**Proxying port 8080 of host to port 80 on container**
+```
+docker run --name container_name -d -p 8080:80 container_image_name
+```
+
+**Setup Nginx Conf and Cloudcmd for nginx-modsecurity**
+```
+docker-compose up -d
+docker cp ./nginx.conf securethebox-challenge_nginx-modsecurity_1:/etc/nginx/nginx.conf
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 cat /etc/nginx/nginx.conf
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 nginx -s reload
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 apk add nodejs nodejs-npm
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 npm install -g cloudcmd
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 npm install -g forever
+docker exec -u root -it securethebox-challenge_nginx-modsecurity_1 forever start /usr/bin/cloudcmd --port 7000
+docker exec -it securethebox-challenge_nginx-modsecurity_1 /bin/sh
+```
+
+**Install and Start Cloudcmd for juice-shop**
+```
+docker exec -u root -it securethebox-challenge_juice-shop_1 npm install -g cloudcmd
+docker exec -u root -it securethebox-challenge_juice-shop_1 npm install -g forever
+docker exec -u root -it securethebox-challenge_juice-shop_1 forever start /usr/local/bin/cloudcmd --port 7000
+docker exec -it securethebox-challenge_juice-shop_1 /bin/sh
+```
+
+**juicebox setup**
+```
+docker run --rm -p 3000:3000 bkimminich/juice-shop
+```
+
+**nginx config**
+```
+server {
+    listen       80;
+    server_name  localhost;
+    modsecurity on;
+    location / {
+        rewrite ^/juice-shop(.*) /$1 break;
+        proxy_pass http://juice-shop:3000;
+    }
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}
+```

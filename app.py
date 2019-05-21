@@ -150,6 +150,8 @@ def setupWAF(clusterName, serviceName, userName):
     findPod = True
     counter = 0
     while findPod:
+        if counter > 10:
+            findPod=False
         print("Setup WAF counter:",counter)
         for i in pod_list:
             if f'nginx-modsecurity-{userName}' in str(i):
@@ -193,6 +195,8 @@ def getPodId(serviceName, userName):
     findPod = True
     counter = 0
     while findPod:
+        if counter > 10:
+            findPod=False
         print(f"Setup {serviceName} counter:",counter)
         for i in pod_list:
             if f'{serviceName}-{userName}' in str(i):
@@ -228,6 +232,11 @@ def getContainerId(podId):
             container_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
             print("FOUND CONTAINER_ID:",container_id)
     return container_id
+
+def setupSplunkPortForwarding(userName):
+    pod_id = getPodId("splunk",userName)
+    subprocess.Popen([f"kubectl port-forward "+pod_id+" 8000:8000"],shell=True).wait()
+    subprocess.Popen([f"kubectl port-forward "+pod_id+" 8089:8089"],shell=True).wait()
 
 def splunkSetupSplunkAddons(clusterName,serviceName,userName):
     pod_id = getPodId("splunk",userName)
@@ -337,7 +346,11 @@ def manageChallenge1(clusterName, userName, action):
         # Setup Cloudcmd
         print("Cloudcmd Setup")
         setupCLOUDCMD(clusterName, 'nginx-modsecurity', userName)
-        setupCLOUDCMD(clusterName, 'juice-shop', userName)
+        # setupCLOUDCMD(clusterName, 'juice-shop', userName)
+
+        # Setup Port Forwarding
+        setupSplunkPortForwarding(userName)
+        
 
     elif action == 'delete':
         # 1. Delete Ingress Pods
@@ -383,8 +396,9 @@ class Kubernetes(Resource):
             # splunkSetupSplunkAddons(args['clusterName'],'splunk',args['userName'])
             # setupCLOUDCMD(args['clusterName'], 'nginx-modsecurity', args['userName'])
             # setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])
-            podId = getPodId(args['serviceName'],args['userName'])
-            podStatus = getPodStatus(podId)
+            # podId = getPodId(args['serviceName'],args['userName'])
+            # podStatus = getPodStatus(podId)
+            setupSplunkPortForwarding(args['userName'])
             
             return podStatus, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"}
         except:

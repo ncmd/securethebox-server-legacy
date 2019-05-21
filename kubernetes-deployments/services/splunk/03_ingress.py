@@ -20,6 +20,13 @@ spec:
         backend:
           serviceName: {serviceName}-{userName}
           servicePort: http
+  - host: {serviceName}-{userName}-management.{clusterName}.securethebox.us
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {serviceName}-{userName}
+          servicePort: management
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-ingress.yml', 'w') as yfile:

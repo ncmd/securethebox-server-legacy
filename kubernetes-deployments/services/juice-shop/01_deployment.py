@@ -24,7 +24,7 @@ spec:
           claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
-        image: "ncmd/juice-shop:challenge1"
+        image: "bkimminich/juice-shop:latest"
         ports:
         - containerPort: 3000
         - containerPort: 9000

@@ -5,6 +5,7 @@ virtualenv venv
 virtualenv -p /Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7 venv
 source venv/bin/activate
 pip freeze > requirements.txt
+pip install -r requirements.txt
 ```
 
 - Clusters should not be created automatically

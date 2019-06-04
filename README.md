@@ -159,7 +159,7 @@ docker run -d \
 **Getting shell of docker container:**
 ```
 docker exec -it c71a87c88a1e /bin/bash
-docker exec -it securethebox-challenge_nginx-modsecurity_1 /bin/sh
+docker exec -it 677912a06309 /bin/sh
 ```
 
 **Installing and Starting Cloudcmd on Alpine:**

@@ -5,6 +5,7 @@ import subprocess
 from subprocess import check_output, STDOUT, CalledProcessError
 import time
 import json
+import requests
 
 '''
 TODO:
@@ -13,7 +14,7 @@ TODO:
 
 - Splunk port forwarding needs to work (it does, but needed portforwarding)
     - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
-    - kubectl port-forward splunk-oppa-7f7b975c4-hfhv7 8000:8000
+    - kubectl port-forward splunk-charles-c76dd785b-h866v 8000:8000
 
 - Generating Answers
     - attacker_ip_address
@@ -71,6 +72,10 @@ def generateKubernetesIngressYaml(clusterName,serviceName):
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/ingress/{serviceName}/05_service.py {clusterName} {serviceName}"],shell=True).wait()
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/ingress/{serviceName}/06_ingress.py {clusterName} {serviceName}"],shell=True).wait()
 
+def generateKubernetesPodsYaml(clusterName,serviceName,userName):
+    print("Generating Pod Yaml",clusterName,serviceName,userName)
+    subprocess.Popen([f"python3.7 ./kubernetes-deployments/pods/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
+
 def generateKubernetesServicesYaml(clusterName, serviceName, userName):
     print("Generating Service Yaml",clusterName,serviceName,userName)
     subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/{serviceName}/01_deployment.py {clusterName} {serviceName} {userName}"],shell=True).wait()
@@ -102,6 +107,9 @@ def manageKubernetesIngressPod(clusterName,serviceName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/04_{clusterName}-{serviceName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/05_{clusterName}-{serviceName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/06_{clusterName}-{serviceName}-ingress.yml"],shell=True).wait()
+
+def manageKubernetesPods(clusterName, serviceName, userName, action):
+    subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/pods/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
 
 def manageKubernetesServicesPod(clusterName, serviceName, userName, action):
     print(action,"Service Pod:",serviceName)
@@ -139,6 +147,10 @@ def deleteNginxConfig(clusterName,serviceName,userName):
 
 # Install Nginx on Container/Pod
 def setupWAF(clusterName, serviceName, userName):
+    print("Checking if Service up with GET request")
+    response = requests.request("GET", 'http://nginx-modsecurity-charles.us-west1-a.securethebox.us')
+    print(response.text)
+
     print("Setup WAF for:",serviceName,userName)
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
@@ -162,7 +174,7 @@ def setupWAF(clusterName, serviceName, userName):
         
     generateNginxConfig(clusterName,serviceName,userName)
     print("POD_ID:",pod_id)
-    print("Sleeping 10 seconds for splunk service to load...")
+    print("setupWAF - Sleeping 10 seconds for nginx service to load...")
     time.sleep(10)
     try:
         print("Copying nginx file to Pod")
@@ -174,10 +186,16 @@ def setupWAF(clusterName, serviceName, userName):
         subprocess.Popen([f"kubectl exec -it "+pod_id+" -- nginx -s reload"],shell=True).wait()
         print("Checking output of reloading Nginx:")
         nginxReloadCommand = ["kubectl","exec","-it",pod_id,"--", "nginx", "-s", "reload"]
-        nginxReloadOut = check_output(nginxReloadCommand)
-        print("Reload Output:",nginxReloadOut.decode("utf-8"))
-        print("Deleting Nginx Conf File...")
-        deleteNginxConfig(clusterName,"juice-shop",userName)
+        try:
+            nginxReloadOut = check_output(nginxReloadCommand)
+            print("Reload Output:",nginxReloadOut.decode("utf-8"))
+            print("Deleting Nginx Conf File...")
+            deleteNginxConfig(clusterName,"juice-shop",userName)
+            print("COMPLETE!!!!")
+        except:
+            print("Error occured... on nginxReloadOut...")
+            setupWAF(clusterName, serviceName, userName)    
+        
     except: 
         print("Error occured... retrying setupWAF...")
         setupWAF(clusterName, serviceName, userName)    
@@ -218,9 +236,6 @@ def getPodStatus(podId):
             return True
         elif i != "running":
             return False
-        
-    
-    
 
 def getContainerId(podId):
     command = ["kubectl","describe","pod",podId]
@@ -232,6 +247,11 @@ def getContainerId(podId):
             container_id = i.decode("utf-8").replace('\'','').split("docker://",1)[1]
             print("FOUND CONTAINER_ID:",container_id)
     return container_id
+
+def setupSplunkUserPreferences(container_id):
+    # /opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf
+    # tz = America/Los_Angeles
+    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/user-prefs.conf "+container_id+":/opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf"],shell=True).wait()
 
 def setupSplunkPortForwarding(userName):
     pod_id = getPodId("splunk",userName)
@@ -269,13 +289,17 @@ def setupSplunkLogging(clusterName,serviceName,userName):
     print("Sleeping 30 Seconds for splunk to get ready")
     time.sleep(30)
 
-    # 0. splunk enable listen 9997 -auth admin:Changeme
-
     # 1. get splunk-universal-forwarder pod_id
     pod_id = getPodId("splunk-universal-forwarder",userName)
     
     # 2. get container_id
     container_id = getContainerId(pod_id)
+
+    # Setup Addons
+    splunkSetupSplunkAddons(clusterName,serviceName,userName)
+    # Setup User Preferences
+    setupSplunkUserPreferences(container_id)
+    
     # 3. Copy inputs
     subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs-2.conf "+container_id+":/opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
     # docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_us-west1-a-splunk-universal-forwarder-oppa-inputs.conf 482a82302dfbc874d6baae8c12066c6bcc73ba25d8bda506f435ee1f942d96fc:/opt/splunkforwarder/etc/system/local/inputs.conf
@@ -317,6 +341,14 @@ def setupCLOUDCMD(clusterName, serviceName, userName):
         subprocess.Popen([f"docker exec -u root "+container_id+" npm install -g cloudcmd forever"],shell=True).wait()
         subprocess.Popen([f"docker exec -u root "+container_id+" forever start /usr/local/bin/cloudcmd --port 9000"],shell=True).wait()
 
+def setupAttacker():
+    subprocess.Popen([f"kubectl apply -f ./kubernetes-deployments/pods/kali-linux/01_pod.yml"],shell=True).wait()
+    # subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/pods/kali-linux/01_pod.yml"],shell=True).wait()
+    # generateKubernetesServicesYaml("us-west1-a", 'kali-linux','charles')
+    # manageKubernetesServicesPod("us-west1-a",'kali-linux', 'charles', 'apply')
+    # manageKubernetesServicesPod("us-west1-a",'kali-linux', 'charles', 'delete')
+    # deleteKubernetesServicesYaml("us-west1-a",'kali-linux','charles')
+
 def manageChallenge1(clusterName, userName, action):
     print(action,"Challenge 1",clusterName,userName)
     if action == 'apply':
@@ -330,11 +362,13 @@ def manageChallenge1(clusterName, userName, action):
         generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
         generateKubernetesServicesYaml(clusterName, 'splunk',userName)
         generateKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
+        generateKubernetesPodsYaml(clusterName, 'kali-linux',userName)
         # 4. Deploy Service pods
         manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
         manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
         manageKubernetesServicesPod(clusterName,'splunk', userName, action)
         manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
+        manageKubernetesPods(clusterName,'kali-linux',userName, action)
         # manageKubernetesServicesPod(clusterName,'wireshark',userName, action)
 
         print("WAF setup")
@@ -359,14 +393,14 @@ def manageChallenge1(clusterName, userName, action):
         deleteKubernetesIngressYaml(clusterName,'traefik')
         # 3. Delete Service Pods
         manageKubernetesServicesPod(clusterName, 'nginx-modsecurity',userName, action)
-        manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        manageKubernetesServicesPod(clusterName, 'juice-shop', userName, action)
         manageKubernetesServicesPod(clusterName, 'splunk', userName, action)
         manageKubernetesServicesPod(clusterName, 'splunk-universal-forwarder', userName, action)
         # 4. Delete Yaml Files
-        deleteKubernetesServicesYaml(clusterName,'nginx-modsecurity',userName)
-        deleteKubernetesServicesYaml(clusterName,'juice-shop',userName)
-        deleteKubernetesServicesYaml(clusterName,'splunk',userName)
-        deleteKubernetesServicesYaml(clusterName,'splunk-universal-forwarder',userName)
+        deleteKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
+        deleteKubernetesServicesYaml(clusterName, 'juice-shop',userName)
+        deleteKubernetesServicesYaml(clusterName, 'splunk',userName)
+        deleteKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
         # 5. Delete Persist Volumes
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
@@ -398,8 +432,9 @@ class Kubernetes(Resource):
             # setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])
             # podId = getPodId(args['serviceName'],args['userName'])
             # podStatus = getPodStatus(podId)
-            setupSplunkPortForwarding(args['userName'])
-            
+            # setupSplunkPortForwarding(args['userName'])
+            setupAttacker()
+
             return podStatus, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"}
         except:
             return args, 404

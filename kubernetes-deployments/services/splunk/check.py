@@ -3,14 +3,17 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
 import splunklib.client as client
 
-HOST = "splunk-charles.us-west1-a.securethebox.us"
+HOST = "splunk-charles-management.us-west1-a.securethebox.us"
 PORT = 8089
 USERNAME = "admin"
 PASSWORD = "Changeme"
 
 service = client.connect(
+    scheme="http",
+    cookie=1,
+    version=7.2,
     host=HOST,
-    port=PORT,
+    port=80,
     username=USERNAME,
     password=PASSWORD)
 

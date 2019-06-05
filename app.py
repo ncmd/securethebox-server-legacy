@@ -6,6 +6,7 @@ from subprocess import check_output, STDOUT, CalledProcessError
 import time
 import json
 import requests
+import os
 
 '''
 TODO:
@@ -248,17 +249,42 @@ def getContainerId(podId):
             print("FOUND CONTAINER_ID:",container_id)
     return container_id
 
+def runSplunkScript():
+    """
+
+    """
+
 def setupSplunkUserPreferences(container_id):
+    # doc
     # /opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf
     # tz = America/Los_Angeles
-    subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/user-prefs.conf "+container_id+":/opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf"],shell=True).wait()
+    # docker exec -it 0f0b570de296 /bin/sh
+    # need to login as admin first
+    print("Setting up Splunk User Preferences",container_id[:12])
+    try:
+        # subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/splunk/check_login.py"],shell=True).wait()
+        # mkdir -p /opt/splunk/etc/users/admin/user-prefs/local/
+        subprocess.Popen([f"docker exec -u root "+container_id+" mkdir -p /opt/splunk/etc/users/admin/user-prefs/local/"],shell=True).wait()
+        subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/user-prefs.conf "+container_id[:12]+":/opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" cat /opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf"],shell=True).wait()
+        subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
+    except:
+        print("Trying again...")
+        setupSplunkUserPreferences(container_id)
+
+    # docker cp ./kubernetes-deployments/services/splunk/user-prefs.conf 24d56f0c7156:/opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf
+
+
 
 def setupSplunkPortForwarding(userName):
     pod_id = getPodId("splunk",userName)
     subprocess.Popen([f"kubectl port-forward "+pod_id+" 8000:8000"],shell=True).wait()
-    subprocess.Popen([f"kubectl port-forward "+pod_id+" 8089:8089"],shell=True).wait()
+    # kubectl port-forward splunk-charles-c76dd785b-f6z5l 8000:8000
+    # os.spawnl(os.P_DETACH, "kubectl port-forward "+pod_id+" 8000:8000")
+    # subprocess.Popen([f"kubectl port-forward "+pod_id+" 8089:8089"],shell=True).wait()
 
 def splunkSetupSplunkAddons(clusterName,serviceName,userName):
+    print("Setting up splunk addons")
     pod_id = getPodId("splunk",userName)
     
     # 2. get container_id
@@ -272,7 +298,29 @@ def splunkSetupSplunkAddons(clusterName,serviceName,userName):
     # Restart splunk service
     subprocess.Popen([f"docker exec -u root "+container_id+" /opt/splunk/bin/splunk restart"],shell=True).wait()
 
-def setupSplunkLogging(clusterName,serviceName,userName):
+# # Setup Addons
+#     splunkSetupSplunkAddons(clusterName,serviceName,userName)
+#     # Setup User Preferences
+#     setupSplunkUserPreferences(container_id)
+
+def setupSplunkMaster(clusterName, userName):
+    print("Setting up Splunk Master Setup")
+    # 1. get splunk-universal-forwarder pod_id
+    pod_id = getPodId("splunk",userName)
+    
+    # 2. get container_id
+    container_id = getContainerId(pod_id)
+
+    splunkSetupSplunkAddons(clusterName,"splunk",userName)
+
+    setupSplunkUserPreferences(container_id)
+
+    setupSplunkPortForwarding(userName)
+
+   
+    
+
+def setupSplunkForwarderLogging(clusterName,serviceName,userName):
     """
     0. enable splunk receving
     1. get splunk-universal-forwarder pod_id
@@ -294,11 +342,6 @@ def setupSplunkLogging(clusterName,serviceName,userName):
     
     # 2. get container_id
     container_id = getContainerId(pod_id)
-
-    # Setup Addons
-    splunkSetupSplunkAddons(clusterName,serviceName,userName)
-    # Setup User Preferences
-    setupSplunkUserPreferences(container_id)
     
     # 3. Copy inputs
     subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk-universal-forwarder/04_{clusterName}-{serviceName}-{userName}-inputs-2.conf "+container_id+":/opt/splunkforwarder/etc/system/local/inputs.conf"],shell=True).wait()
@@ -323,7 +366,7 @@ def setupSplunkLogging(clusterName,serviceName,userName):
     except:
         print("Failed to setup Splunk Forwarder... retrying in 10 seconds")
         time.sleep(10)
-        setupSplunkLogging(clusterName,serviceName,userName)
+        setupSplunkForwarderLogging(clusterName,serviceName,userName)
 
 # Install Cloudcmd on Container/Pod
 def setupCLOUDCMD(clusterName, serviceName, userName):
@@ -375,7 +418,7 @@ def manageChallenge1(clusterName, userName, action):
         setupWAF(clusterName, 'juice-shop', userName)
         
         print("Splunk Universal Forwarder Setup")
-        setupSplunkLogging(clusterName, 'splunk-universal-forwarder', userName)
+        setupSplunkForwarderLogging(clusterName, 'splunk-universal-forwarder', userName)
 
         # Setup Cloudcmd
         print("Cloudcmd Setup")
@@ -383,7 +426,7 @@ def manageChallenge1(clusterName, userName, action):
         # setupCLOUDCMD(clusterName, 'juice-shop', userName)
 
         # Setup Port Forwarding
-        setupSplunkPortForwarding(userName)
+        setupSplunkMaster(clusterName,userName)
         
 
     elif action == 'delete':
@@ -426,7 +469,7 @@ class Kubernetes(Resource):
         args = kubernetes_parser.parse_args()
         try:
             # setupWAF(args['clusterName'],'juice-shop',args['userName'])
-            # setupSplunkLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
+            # setupSplunkForwarderLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
             # splunkSetupSplunkAddons(args['clusterName'],'splunk',args['userName'])
             # setupCLOUDCMD(args['clusterName'], 'nginx-modsecurity', args['userName'])
             # setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])

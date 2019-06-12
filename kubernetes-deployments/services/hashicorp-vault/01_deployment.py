@@ -24,13 +24,19 @@ spec:
             claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
-        image: "really/nginx-modsecurity:latest"
+        image: ffeldhaus/wireshark:latest
         ports:
-        - containerPort: 80
-        - containerPort: 9000
+        - containerPort: 14500
+        securityContext:
+          capabilities:
+            add:
+              - NET_ADMIN
+        env:
+          - name: XPRA_PW
+            value: Changeme
         volumeMounts:
-          - mountPath: "/var/log/challenge1"
-            name: task-pv-storage
+        - mountPath: "/var/log/challenge1"
+          name: task-pv-storage
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:

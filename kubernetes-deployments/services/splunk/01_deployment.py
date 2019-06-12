@@ -9,7 +9,7 @@ metadata:
   labels:
     app: {serviceName}-{userName}
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: {serviceName}-{userName}
@@ -32,8 +32,6 @@ spec:
         env:
           - name: SPLUNK_START_ARGS
             value: --accept-license
-          - name: SPLUNK_USER
-            value: admin
           - name: SPLUNK_PASSWORD
             value: Changeme
         volumeMounts:

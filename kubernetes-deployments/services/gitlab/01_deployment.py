@@ -9,7 +9,7 @@ metadata:
   labels:
     app: {serviceName}-{userName}
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: {serviceName}-{userName}
@@ -18,25 +18,36 @@ spec:
       labels:
         app: {serviceName}-{userName}
     spec:
-      volumes:
-        - name: task-pv-storage
-          persistentVolumeClaim:
-            claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
-        image: ffeldhaus/wireshark:latest
+        image: gitlab/gitlab-ce:latest
         ports:
-        - containerPort: 14500
-        securityContext:
-          capabilities:
-            add:
-              - NET_ADMIN
-        env:
-          - name: XPRA_PW
-            value: Changeme
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 8080
+          - containerPort: 22
         volumeMounts:
-        - mountPath: "/var/log/challenge1"
-          name: task-pv-storage
+          - name: dockersock
+            mountPath: "/var/run/docker.sock"
+          - name: gitlab-config
+            mountPath: "/srv/gitlab/config"
+          - name: gitlab-logs
+            mountPath: "/srv/gitlab/logs"
+          - name: gitlab-data
+            mountPath: "/srv/gitlab/data"
+      volumes:
+      - name: gitlab-config
+        hostPath:
+          path: /etc/gitlab
+      - name: gitlab-logs
+        hostPath:
+          path: /var/log/gitlab
+      - name: gitlab-data
+        hostPath:
+          path: /var/opt/gitlab
+      - name: dockersock
+        hostPath:
+          path: /var/run/docker.sock
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:

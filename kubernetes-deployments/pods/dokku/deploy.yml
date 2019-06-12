@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: dokku-charles
-        image: ubuntu:14.04
+        image: ubuntu:latest
         command: ["/bin/sh", "-c"]
         ports:
           - containerPort: 80
@@ -27,7 +27,7 @@ spec:
           apt-get update -y;
           apt-get install wget -y;
           wget https://raw.githubusercontent.com/dokku/dokku/master/bootstrap.sh;
-          sudo DOKKU_NO_INSTALL_RECOMMENDS=true bash bootstrap.sh
+          DOKKU_NO_INSTALL_RECOMMENDS=true bash bootstrap.sh
           echo done;
           while true ; do continue ; done ;
         volumeMounts:

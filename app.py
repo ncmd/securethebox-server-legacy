@@ -54,16 +54,6 @@ kubectl delete po,svc,deployment --all
 app = Flask(__name__)
 api = Api(app)
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
-# def executeShellCommandWithStdout(command):
-#     print("Executing Shell Command!",command)
-#     try:
-#         output = check_output(command, stderr=STDOUT).decode()
-#         print("Executed...")
-#         abort(404, message=str(output))
-#     except CalledProcessError as e:
-#         output = e.output.decode()
-#         print("Failed...")
-#         abort(404, message=str(output))
 
 def generateKubernetesIngressYaml(clusterName,serviceName):
     print("Generating Ingress Yaml",clusterName,serviceName)
@@ -110,12 +100,20 @@ def manageKubernetesIngressPod(clusterName,serviceName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/05_{clusterName}-{serviceName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/06_{clusterName}-{serviceName}-ingress.yml"],shell=True).wait()
 
+def createPersistentVolumes(action):
+    print('Creating Persistent Volume and Claim')
+    subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
+    subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()
+    # kubectl apply -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml
+    # kubectl apply -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml
+
 def manageKubernetesPods(clusterName, serviceName, userName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/pods/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
 
 def manageKubernetesServicesPod(clusterName, serviceName, userName, action):
     print(action,"Service Pod:",serviceName)
     if action == 'apply':
+        print('Creating Persistent Volume and Claim')
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()
     # time.sleep(10)
@@ -150,9 +148,11 @@ def deleteNginxConfig(clusterName,serviceName,userName):
 # Install Nginx on Container/Pod
 def setupWAF(clusterName, serviceName, userName):
     print("Checking if Service up with GET request")
-    response = requests.request("GET", 'http://nginx-modsecurity-charles.us-west1-a.securethebox.us')
-    print(response.text)
-
+    try:
+        response = requests.request("GET", 'http://nginx-modsecurity-charles.us-west1-a.securethebox.us')
+        print(response.text)
+    except:
+        print("Cannot get response...")
     print("Setup WAF for:",serviceName,userName)
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output
@@ -263,7 +263,7 @@ def setupSplunkUserPreferences(container_id):
     # need to login as admin first
     print("Setting up Splunk User Preferences",container_id[:12])
     try:
-        # subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/splunk/check_login.py"],shell=True).wait()
+        subprocess.Popen([f"python3.7 ./kubernetes-deployments/services/splunk/check_login.py"],shell=True).wait()
         # mkdir -p /opt/splunk/etc/users/admin/user-prefs/local/
         subprocess.Popen([f"docker exec -u root "+container_id+" mkdir -p /opt/splunk/etc/users/admin/user-prefs/local/"],shell=True).wait()
         subprocess.Popen([f"docker cp ./kubernetes-deployments/services/splunk/user-prefs.conf "+container_id[:12]+":/opt/splunk/etc/users/admin/user-prefs/local/user-prefs.conf"],shell=True).wait()
@@ -314,11 +314,8 @@ def setupSplunkMaster(clusterName, userName):
     
     # 2. get container_id
     container_id = getContainerId(pod_id)
-
     splunkSetupSplunkAddons(clusterName,"splunk",userName)
-
     setupSplunkUserPreferences(container_id)
-
     setupSplunkPortForwarding(userName)
 
    
@@ -420,35 +417,39 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesIngressPod(clusterName, 'traefik', action)
         # 3. Generate Yaml Service Files
         time.sleep(10)
-        generateKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
-        generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
-        generateKubernetesServicesYaml(clusterName, 'splunk',userName)
-        generateKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
-        generateKubernetesPodsYaml(clusterName, 'kali-linux',userName)
+        # generateKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
+        # generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
+        # generateKubernetesServicesYaml(clusterName, 'splunk',userName)
+        # generateKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
+        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
+        generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
+        # generateKubernetesPodsYaml(clusterName, 'kali-linux',userName)
         # 4. Deploy Service pods
-        manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
-        manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
-        manageKubernetesServicesPod(clusterName,'splunk', userName, action)
-        manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
-        manageKubernetesPods(clusterName,'kali-linux',userName, action)
+        # manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
+        # manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        # manageKubernetesServicesPod(clusterName,'splunk', userName, action)
+        # manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
+        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
+        manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
+        # manageKubernetesPods(clusterName,'kali-linux',userName, action)
         # manageKubernetesServicesPod(clusterName,'wireshark',userName, action)
 
-        print("WAF setup")
-        setupWAF(clusterName, 'juice-shop', userName)
+        # print("WAF setup")
+        # setupWAF(clusterName, 'juice-shop', userName)
         
-        print("Splunk Universal Forwarder Setup")
-        setupSplunkForwarderLogging(clusterName, 'splunk-universal-forwarder', userName)
+        # print("Splunk Universal Forwarder Setup")
+        # setupSplunkForwarderLogging(clusterName, 'splunk-universal-forwarder', userName)
 
-        # Setup Cloudcmd
-        print("Cloudcmd Setup")
-        setupCLOUDCMD(clusterName, 'nginx-modsecurity', userName)
-        setupCLOUDCMD(clusterName, 'juice-shop', userName)
+        # # Setup Cloudcmd
+        # print("Cloudcmd Setup")
+        # setupCLOUDCMD(clusterName, 'nginx-modsecurity', userName)
+        # setupCLOUDCMD(clusterName, 'juice-shop', userName)
 
-        # Setup Attacker
-        setupAttacker(clusterName,'kali-linux',userName)
+        # # Setup Attacker
+        # setupAttacker(clusterName,'kali-linux',userName)
 
         # Setup Port Forwarding
-        setupSplunkMaster(clusterName,userName)
+        # setupSplunkMaster(clusterName,userName)
         
 
     elif action == 'delete':
@@ -461,11 +462,15 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesServicesPod(clusterName, 'juice-shop', userName, action)
         manageKubernetesServicesPod(clusterName, 'splunk', userName, action)
         manageKubernetesServicesPod(clusterName, 'splunk-universal-forwarder', userName, action)
+        manageKubernetesServicesPod(clusterName, 'jenkins', userName, action)
+        manageKubernetesServicesPod(clusterName, 'gitlab', userName, action)
         # 4. Delete Yaml Files
         deleteKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
         deleteKubernetesServicesYaml(clusterName, 'juice-shop',userName)
         deleteKubernetesServicesYaml(clusterName, 'splunk',userName)
         deleteKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
+        deleteKubernetesServicesYaml(clusterName, 'jenkins',userName)
+        deleteKubernetesServicesYaml(clusterName, 'gitlab',userName)
         # 5. Delete Persist Volumes
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
@@ -490,19 +495,30 @@ class Kubernetes(Resource):
     def get(self, challenge_id):
         args = kubernetes_parser.parse_args()
         try:
-            # setupWAF(args['clusterName'],'juice-shop',args['userName'])
-            # setupSplunkForwarderLogging(args['clusterName'],'splunk-universal-forwarder',args['userName'])
-            # splunkSetupSplunkAddons(args['clusterName'],'splunk',args['userName'])
-            # setupCLOUDCMD(args['clusterName'], 'nginx-modsecurity', args['userName'])
-            # setupCLOUDCMD(args['clusterName'], 'juice-shop', args['userName'])
-            # podId = getPodId(args['serviceName'],args['userName'])
-            # podStatus = getPodStatus(podId)
-            # setupSplunkPortForwarding(args['userName'])
-            setupAttacker(clusterName,'kali-linux',userName)
+            resetGitlabRootPassword('gitlab',"charles")
+            createGitlabProject("us-west1-a",'gitlab',"charles")
             return args, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"}
         except:
             return args, 404
 
+def createGitlabProject(clusterName,serviceName, userName):
+    os.chdir('./apps')
+    print("CWD:",os.getcwd())
+    # make sure this server has 'git' installed
+    subprocess.Popen([f"git clone https://github.com/ncmd/juice-shop.git juice-shop-"+userName],shell=True).wait()
+    os.chdir('./juice-shop-'+userName)
+    print("CWD:",os.getcwd())
+    subprocess.Popen([f"rm -rf .git"],shell=True).wait()
+    subprocess.Popen([f"git init"],shell=True).wait()
+    subprocess.Popen([f"git add ."],shell=True).wait()
+    subprocess.Popen([f"git commit -m 'production app'"],shell=True).wait()
+    subprocess.Popen([f"git push --set-upstream http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+".git master"],shell=True).wait()
+
+def resetGitlabRootPassword(serviceName,userName):
+    pod_id = getPodId(serviceName,userName)
+    container_id = getContainerId(pod_id)
+    subprocess.Popen([f"docker exec "+container_id+" gitlab-rails runner -e production 'user = User.where(id: 1).first; user.password = user.password_confirmation = \'Changeme\'; user.save!'],shell=True).wait()"])
+    # docker exec cf23bfaab93c gitlab-rails runner -e production "user = User.where(id: 1).first; user.password = user.password_confirmation = 'Changeme'; user.save!"
 
 
 # Check answer according to challengeNumber & questionNumber

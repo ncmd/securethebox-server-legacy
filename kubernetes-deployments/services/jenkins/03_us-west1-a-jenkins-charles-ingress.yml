@@ -1,7 +1,8 @@
+
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: dokku-charles
+  name: jenkins-charles
   annotations:
     kubernetes.io/ingress.class: traefik
     kubernetes.io/preserve-host: "true"
@@ -9,10 +10,12 @@ metadata:
     traefik.frontend.priority: "1"
 spec:
   rules:
-  - host: dokku-charles.us-west1-a.securethebox.us
+  - host: jenkins-charles.us-west1-a.securethebox.us
     http:
       paths:
       - path: /
         backend:
-          serviceName: dokku-charles
+          serviceName: jenkins-charles
           servicePort: http
+
+              

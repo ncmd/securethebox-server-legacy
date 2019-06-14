@@ -10,3 +10,4 @@ pytz==2019.1
 six==1.12.0
 Werkzeug==0.15.2
 Flask-Cors==3.0.7
+python-gitlab==1.8.0

@@ -9,7 +9,7 @@ metadata:
   labels:
     app: {serviceName}-{userName}
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: {serviceName}-{userName}

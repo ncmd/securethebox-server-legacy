@@ -2,20 +2,6 @@ import sys
 
 
 def writeConfig(**kwargs):
-    templateo = """
-kind: ConfigMap
-apiVersion: v1
-metadata:
-  name: traefik-config
-  namespace: default
-data:
-  traefik.toml: |
-    defaultEntryPoints = ["http"]
-    [entryPoints]
-      [entryPoints.http]
-      address = ":80"
-    [kubernetes]
-    """
     template = """
 kind: ConfigMap
 apiVersion: v1
@@ -34,6 +20,10 @@ data:
       # address = ":443"
       #   [entryPoints.https.tls]
     [kubernetes]
+    [respondingTimeouts]
+      # idleTimeout is the maximum duration an idle (keep-alive) connection will remain idle before closing itself.
+      # This needs to be set longer than the GCP load balancer timeout
+      idleTimeout = "620s"
               """
 
     with open('./kubernetes-deployments/ingress/'+str(sys.argv[2])+'/03_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-config.yml', 'w') as yfile:

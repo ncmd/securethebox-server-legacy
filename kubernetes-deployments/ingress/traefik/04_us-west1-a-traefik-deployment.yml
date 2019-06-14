@@ -4,7 +4,7 @@ apiVersion: extensions/v1beta1
 metadata:
   name: traefik-us-west1-a-ingress-controller
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:

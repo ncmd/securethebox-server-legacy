@@ -2,21 +2,6 @@ import sys
 
 
 def writeConfig(**kwargs):
-    templateo = """
-kind: Service
-apiVersion: v1
-metadata:
-  name: traefik-ingress-controller
-spec:
-  selector:
-    app: traefik-ingress-controller
-  ports:
-    - port: 80
-      name: http
-    - port: 8080
-      name: admin
-  type: LoadBalancer
-    """
     template = """
 kind: Service
 apiVersion: v1

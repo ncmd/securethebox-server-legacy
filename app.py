@@ -7,6 +7,7 @@ import time
 import json
 import requests
 import os
+from app_controller_gitlab import (gitlabGetResetPasswordToken, gitlabPostResetPassword)
 
 '''
 TODO:
@@ -513,12 +514,13 @@ def createGitlabProject(clusterName,serviceName, userName):
     subprocess.Popen([f"git add ."],shell=True).wait()
     subprocess.Popen([f"git commit -m 'production app'"],shell=True).wait()
     subprocess.Popen([f"git push --set-upstream http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+".git master"],shell=True).wait()
+    # docker exec 26fc4c0a614d gitlab-rails runner -e production 'user = User.where(id: 1).first; user.password = user.password_confirmation = 'Changeme'; user.save!'
 
 def resetGitlabRootPassword(serviceName,userName):
     pod_id = getPodId(serviceName,userName)
     container_id = getContainerId(pod_id)
     subprocess.Popen([f"docker exec "+container_id+" gitlab-rails runner -e production 'user = User.where(id: 1).first; user.password = user.password_confirmation = \'Changeme\'; user.save!'],shell=True).wait()"])
-    # docker exec cf23bfaab93c gitlab-rails runner -e production "user = User.where(id: 1).first; user.password = user.password_confirmation = 'Changeme'; user.save!"
+    # docker exec 26fc4c0a614d gitlab-rails runner -e production 'user = User.where(id: 1).first; user.password = user.password_confirmation = 'Changeme'; user.save!'],shell=True).wait()
 
 
 # Check answer according to challengeNumber & questionNumber

@@ -8,7 +8,7 @@ apiVersion: extensions/v1beta1
 metadata:
   name: {serviceName}-{clusterName}-ingress-controller
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:

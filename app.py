@@ -422,16 +422,16 @@ def manageChallenge1(clusterName, userName, action):
         # generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
         # generateKubernetesServicesYaml(clusterName, 'splunk',userName)
         # generateKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
-        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
         generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
+        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
         # generateKubernetesPodsYaml(clusterName, 'kali-linux',userName)
         # 4. Deploy Service pods
         # manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
         # manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
         # manageKubernetesServicesPod(clusterName,'splunk', userName, action)
         # manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
-        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
         manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
+        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
         # manageKubernetesPods(clusterName,'kali-linux',userName, action)
         # manageKubernetesServicesPod(clusterName,'wireshark',userName, action)
 

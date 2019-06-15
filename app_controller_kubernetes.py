@@ -1,5 +1,27 @@
 import subprocess
+from subprocess import check_output
 
+def kubernetesGetPodId(serviceName, userName):
+    command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
+    # Command Output
+    out = check_output(command)
+    # List of online pods into a List
+    pod_list = out.decode("utf-8").replace('\'','').splitlines()
+
+    pod_id = ''
+    findPod = True
+    counter = 0
+    while findPod:
+        if counter > 10:
+            findPod=False
+        print(f"Setup {serviceName} counter:",counter)
+        for i in pod_list:
+            if f'{serviceName}-{userName}' in str(i):
+                pod_id = str(i)
+                findPod=False
+                print("FOUND POD_ID:",pod_id)
+        counter+=1
+    return pod_id
 
 def generateKubernetesIngressYaml(clusterName,serviceName):
     print("Generating Ingress Yaml",clusterName,serviceName)
@@ -65,3 +87,7 @@ def manageKubernetesServicesPod(clusterName, serviceName, userName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/01_{clusterName}-{serviceName}-{userName}-deployment.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/02_{clusterName}-{serviceName}-{userName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/services/{serviceName}/03_{clusterName}-{serviceName}-{userName}-ingress.yml"],shell=True).wait()
+
+
+if __name__ == "__main__":
+    kubernetesGetPodId('jenkins','charles')

@@ -24,10 +24,19 @@ spec:
           claimName: task-pv-claim
       containers:
       - name: {serviceName}-{userName}
-        image: "ncmd/juice-shop:latest"
-        ports:
-        - containerPort: 3000
-        - containerPort: 9000
+        image: node:8-jessie
+          ports:
+            - containerPort: 3000
+            - containerPort: 9000
+          command: ["/bin/sh", "-c"]
+          args:
+          - git clone http://gitlab-{userName}/root/{serviceName}-{userName}.git &&
+            cd {serviceName}-{userName} &&
+            npm install &&
+            npm run postinstall &&
+            npm run start & 
+            echo done ;
+            while true ; do continue ; done ;
         volumeMounts:
         - mountPath: "/var/log/challenge1"
           name: task-pv-storage

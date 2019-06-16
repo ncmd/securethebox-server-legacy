@@ -8,7 +8,7 @@ import urllib
 import time
 from app_controller_docker import dockerGetContainerId
 from app_controller_kubernetes import kubernetesGetPodId
-# from app_controller_gitlab import gitlabGeneratePersonalAccessToken
+from app_controller_gitlab import gitlabCreatePersonalAccessToken
 
 """
 1. deploy,service,ingress - done
@@ -20,10 +20,12 @@ from app_controller_kubernetes import kubernetesGetPodId
 """
 
 # Installs Gitlab & Git Plugin
+# Go to http://jenkins-charles.us-west1-a.securethebox.us/updateCenter/ to see progress
 def jenkinsInstallPlugin(clusterName,userName):
     url = "http://jenkins-"+userName+"."+clusterName+".securethebox.us/pluginManager/install"
     
     payload = "json=%7B%20%22GitLab%22%3A%20%7B%22default%22%3A%20true%7D%2C%22docker-build-step%22%3A%7B%22default%22%3Atrue%7D%2C%22Kubernetes%20Continuous%20Deploy%22%3A%20%7B%22default%22%3A%20true%7D%2C%22Git%22%3A%20%7B%22default%22%3A%20true%7D%7D&dynamicLoad=Install%20without%20restart&plugin.git.default=on&plugin.gitlab-plugin.default=on&plugin.kubernetes-cd.default=on&plugin.docker-build-step.default=on"
+
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
         'Accept': "*/*",
@@ -34,6 +36,7 @@ def jenkinsInstallPlugin(clusterName,userName):
         }
     response = requests.request("POST", url, data=payload, headers=headers)
     print(response.status_code)
+    print(response.text)
 
 def jenkinsRestartServer(clusterName,userName):
     url = "http://jenkins-"+userName+"."+clusterName+".securethebox.us/restart"
@@ -81,7 +84,7 @@ def jenkinsConnectGitlab(api_token,clusterName,userName):
 def jenkinsCreateSSHKeypair(serviceName,userName):
     pod_id = kubernetesGetPodId(serviceName,userName)
     container_id = dockerGetContainerId(pod_id)
-    subprocess.Popen([f"docker exec -i "+container_id+"  bash -c \"ssh-keygen -f /id_rsa -t rsa -N '' -y\""],shell=True).wait()
+    subprocess.Popen([f"docker exec -i "+container_id+"  bash -c \"ssh-keygen -f id_rsa -t rsa -N ''\""],shell=True).wait()
 
 def jenkinsGetSSHPublicKey(serviceName,userName):
     pod_id = kubernetesGetPodId(serviceName,userName)
@@ -101,8 +104,55 @@ def jenkinsGetSSHPrivateKey(serviceName,userName):
     print("PRIVATE KEY:",ssh_private_key)
     return ssh_private_key
 
+def jenkinsJobAddSourceCodeManagement():
+    # source code management in jenkins:
+    # http://gitlab-charles/root/juice-shop-charles
+    print()
 
-    # add private key to jenkins
+def jenkinsCredentialsAddSSHPrivateKey(private_key):
+    url1 = "http://jenkins-charles.us-west1-a.securethebox.us/descriptor/com.cloudbees.plugins.credentials.CredentialsSelectHelper/resolver/com.cloudbees.plugins.credentials.CredentialsSelectHelper$SystemContextResolver/provider/com.cloudbees.plugins.credentials.SystemCredentialsProvider$ProviderImpl/context/jenkins/addCredentials"
+    # title = jenkins-charles-root-private-key
+    headers1 = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    private_key_encoded = str(urllib.parse.quote(private_key))
+    payload1 = "_.domain=_&_.scope=GLOBAL&_.username=&_.password=&_.id=&_.description=&stapler-class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&stapler-class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&%24class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&_.scope=GLOBAL&_.id=jenkins-charles-root-private-key&_.description=&_.username=jenkins&id47.privateKeySource=0&_.privateKey=\
+        "+private_key_encoded+"\
+            &stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&_.passphrase=&stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&stapler-class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&json=%7B%22domain%22%3A+%22_%22%2C+%22%22%3A+%222%22%2C+%22credentials%22%3A+%7B%22scope%22%3A+%22GLOBAL%22%2C+%22id%22%3A+%22jenkins-charles-root-private-key%22%2C+%22description%22%3A+%22%22%2C+%22username%22%3A+%22jenkins%22%2C+%22privateKeySource%22%3A+%7B%22value%22%3A+%220%22%2C+%22privateKey%22%3A+%22\
+                "+private_key_encoded+"\
+                    %22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%7D%2C+%22passphrase%22%3A+%22%22%2C+%22%24redact%22%3A+%22passphrase%22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%7D%7D"
+    response1 = requests.request("POST",url1, data=payload1, headers=headers1)
+    print(response1.status_code)
+
+
+def jenkinsCreateJob(serviceName,userName):
+    # Need to install plugins first
+    # job title: deploy-to-kubernetes
+    url1 = "http://jenkins-charles.us-west1-a.securethebox.us/view/all/createItem"
+    headers1 = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    payload1 = "name=deploy-to-kubernetes&mode=hudson.model.FreeStyleProject&json=%7B%22name%22%3A+%22deploy-to-kubernetes%22%2C+%22mode%22%3A+%22hudson.model.FreeStyleProject%22%7D"
+    response1 = requests.request("POST",url1, data=payload1, headers=headers1)
+    print(response1.status_code)
+
+    # add private key to job
+    private_key = jenkinsGetSSHPublicKey('jenkins','charles')
+    jenkinsCredentialsAddSSHPrivateKey(private_key)
+
+    # add shell command
+    pod_id = kubernetesGetPodId(serviceName,userName)
+    container_id = dockerGetContainerId(pod_id)
+    # save job
+    url2 = "http://jenkins-charles.us-west1-a.securethebox.us/job/deploy-to-kubernetes/configSubmit"
+    headers2 = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+    payload2 = "description=&stapler-class-bag=true&_.daysToKeepStr=&_.numToKeepStr=&_.artifactDaysToKeepStr=&_.artifactNumToKeepStr=&stapler-class=hudson.tasks.LogRotator&%24class=hudson.tasks.LogRotator&_.gitLabConnection=gitlab-charles-root-connection&quiet_period=5&scmCheckoutRetryCount=0&_.customWorkspace=&_.displayNameOrNull=&stapler-class=hudson.scm.NullSCM&%24class=hudson.scm.NullSCM&scm=1&stapler-class=hudson.plugins.git.GitSCM&%24class=hudson.plugins.git.GitSCM&_.url=http%3A%2F%2Fgitlab-charles%2Froot%2Fjuice-shop-charles&_.credentialsId=jenkins-charles-root-private-key&_.name=&_.refspec=&_.name=*%2Fmaster&stapler-class=hudson.plugins.git.browser.AssemblaWeb&%24class=hudson.plugins.git.browser.AssemblaWeb&stapler-class=hudson.plugins.git.browser.FisheyeGitRepositoryBrowser&%24class=hudson.plugins.git.browser.FisheyeGitRepositoryBrowser&stapler-class=hudson.plugins.git.browser.KilnGit&%24class=hudson.plugins.git.browser.KilnGit&stapler-class=hudson.plugins.git.browser.TFS2013GitRepositoryBrowser&%24class=hudson.plugins.git.browser.TFS2013GitRepositoryBrowser&stapler-class=hudson.plugins.git.browser.BitbucketWeb&%24class=hudson.plugins.git.browser.BitbucketWeb&stapler-class=hudson.plugins.git.browser.CGit&%24class=hudson.plugins.git.browser.CGit&stapler-class=hudson.plugins.git.browser.GitBlitRepositoryBrowser&%24class=hudson.plugins.git.browser.GitBlitRepositoryBrowser&stapler-class=hudson.plugins.git.browser.GithubWeb&%24class=hudson.plugins.git.browser.GithubWeb&stapler-class=hudson.plugins.git.browser.Gitiles&%24class=hudson.plugins.git.browser.Gitiles&stapler-class=hudson.plugins.git.browser.GitLab&%24class=hudson.plugins.git.browser.GitLab&stapler-class=hudson.plugins.git.browser.GitList&%24class=hudson.plugins.git.browser.GitList&stapler-class=hudson.plugins.git.browser.GitoriousWeb&%24class=hudson.plugins.git.browser.GitoriousWeb&stapler-class=hudson.plugins.git.browser.GitWeb&%24class=hudson.plugins.git.browser.GitWeb&stapler-class=hudson.plugins.git.browser.GogsGit&%24class=hudson.plugins.git.browser.GogsGit&stapler-class=hudson.plugins.git.browser.Phabricator&%24class=hudson.plugins.git.browser.Phabricator&stapler-class=hudson.plugins.git.browser.RedmineWeb&%24class=hudson.plugins.git.browser.RedmineWeb&stapler-class=hudson.plugins.git.browser.RhodeCode&%24class=hudson.plugins.git.browser.RhodeCode&stapler-class=hudson.plugins.git.browser.Stash&%24class=hudson.plugins.git.browser.Stash&stapler-class=hudson.plugins.git.browser.ViewGitWeb&%24class=hudson.plugins.git.browser.ViewGitWeb&_.upstreamProjects=&ReverseBuildTrigger.threshold=SUCCESS&_.spec=&com-dabsquared-gitlabjenkins-GitLabPushTrigger=on&_.triggerOnPush=on&_.triggerOpenMergeRequestOnPush=never&_.noteRegex=Jenkins+please+retry+a+build&_.ciSkip=on&_.skipWorkInProgressMergeRequest=on&_.setBuildDescription=on&_.pendingBuildName=&branchFilterType=All&includeBranchesSpec=&excludeBranchesSpec=&sourceBranchRegex=&targetBranchRegex=&include=&exclude=&_.secretToken=&_.scmpoll_spec=&command=docker+exec+-i+"+container_id+"+bash+-c+%22cd+juice-shop-charles+%3B+git+pull%22&_.unstableReturn=&stapler-class=hudson.tasks.Shell&%24class=hudson.tasks.Shell&core%3Aapply=&json=%7B%22description%22%3A+%22%22%2C+%22properties%22%3A+%7B%22stapler-class-bag%22%3A+%22true%22%2C+%22jenkins-model-BuildDiscarderProperty%22%3A+%7B%22specified%22%3A+false%2C+%22%22%3A+%220%22%2C+%22strategy%22%3A+%7B%22daysToKeepStr%22%3A+%22%22%2C+%22numToKeepStr%22%3A+%22%22%2C+%22artifactDaysToKeepStr%22%3A+%22%22%2C+%22artifactNumToKeepStr%22%3A+%22%22%2C+%22stapler-class%22%3A+%22hudson.tasks.LogRotator%22%2C+%22%24class%22%3A+%22hudson.tasks.LogRotator%22%7D%7D%2C+%22com-dabsquared-gitlabjenkins-connection-GitLabConnectionProperty%22%3A+%7B%22gitLabConnection%22%3A+%22gitlab-charles-root-connection%22%7D%2C+%22hudson-model-ParametersDefinitionProperty%22%3A+%7B%22specified%22%3A+false%7D%7D%2C+%22disable%22%3A+false%2C+%22concurrentBuild%22%3A+false%2C+%22hasCustomQuietPeriod%22%3A+false%2C+%22quiet_period%22%3A+%225%22%2C+%22hasCustomScmCheckoutRetryCount%22%3A+false%2C+%22scmCheckoutRetryCount%22%3A+%220%22%2C+%22blockBuildWhenUpstreamBuilding%22%3A+false%2C+%22blockBuildWhenDownstreamBuilding%22%3A+false%2C+%22hasCustomWorkspace%22%3A+false%2C+%22customWorkspace%22%3A+%22%22%2C+%22displayNameOrNull%22%3A+%22%22%2C+%22scm%22%3A+%7B%22value%22%3A+%221%22%2C+%22stapler-class%22%3A+%22hudson.plugins.git.GitSCM%22%2C+%22%24class%22%3A+%22hudson.plugins.git.GitSCM%22%2C+%22userRemoteConfigs%22%3A+%7B%22url%22%3A+%22http%3A%2F%2Fgitlab-charles%2Froot%2Fjuice-shop-charles%22%2C+%22credentialsId%22%3A+%22jenkins-charles-root-private-key%22%2C+%22name%22%3A+%22%22%2C+%22refspec%22%3A+%22%22%7D%2C+%22branches%22%3A+%7B%22name%22%3A+%22*%2Fmaster%22%7D%2C+%22%22%3A+%22auto%22%7D%2C+%22com-dabsquared-gitlabjenkins-GitLabPushTrigger%22%3A+%7B%22triggerOnPush%22%3A+true%2C+%22triggerOnMergeRequest%22%3A+false%2C+%22triggerOnAcceptedMergeRequest%22%3A+false%2C+%22triggerOnClosedMergeRequest%22%3A+false%2C+%22triggerOpenMergeRequestOnPush%22%3A+%22never%22%2C+%22triggerOnApprovedMergeRequest%22%3A+false%2C+%22triggerOnNoteRequest%22%3A+false%2C+%22noteRegex%22%3A+%22Jenkins+please+retry+a+build%22%2C+%22ciSkip%22%3A+true%2C+%22skipWorkInProgressMergeRequest%22%3A+true%2C+%22setBuildDescription%22%3A+true%2C+%22triggerOnPipelineEvent%22%3A+false%2C+%22pendingBuildName%22%3A+%22%22%2C+%22cancelPendingBuildsOnUpdate%22%3A+false%2C+%22branchFilterType%22%3A+%22All%22%2C+%22includeBranchesSpec%22%3A+%22%22%2C+%22excludeBranchesSpec%22%3A+%22%22%2C+%22sourceBranchRegex%22%3A+%22%22%2C+%22targetBranchRegex%22%3A+%22%22%2C+%22secretToken%22%3A+%22%22%7D%2C+%22builder%22%3A+%7B%22command%22%3A+%22docker+exec+-i+"+container_id+"+bash+-c+%5C%22cd+juice-shop-charles+%3B+git+pull%5C%22%22%2C+%22%22%3A+%22docker+exec+-i+"+container_id+"+bash+-c+%5C%22cd+juice-shop-charles+%3B+git+pull%5C%22%22%2C+%22unstableReturn%22%3A+%22%22%2C+%22stapler-class%22%3A+%22hudson.tasks.Shell%22%2C+%22%24class%22%3A+%22hudson.tasks.Shell%22%7D%2C+%22core%3Aapply%22%3A+%22%22%7D&Submit=Save"
+
+    response2 = requests.request("POST",url2, data=payload2, headers=headers2)
+    print(response2.status_code)
+
     # ssh-keygen -f id_rsa -t rsa -N ''
     # cat /root/.ssh/id_rsa
     # cat /root/.ssh/id_rsa.pub
@@ -118,14 +168,21 @@ def jenkinsGetSSHPrivateKey(serviceName,userName):
     # docker exec -i 557ccefcc2ca  bash -c "cd juice-shop-charles ; git pull"
 
 def main():
-    # jenkinsInstallPlugin('"+clusterName+"','"+userName+"')
+    # jenkinsInstallPlugin("us-west1-a","charles")
     # time.sleep(30)
-    # api_token = gitlabGeneratePersonalAccessToken()
+    # api_token = gitlabCreatePersonalAccessToken()
     # print("API TOKEN:",api_token)
     # jenkinsConnectGitlab(api_token,"us-west1-a","charles")
     # time.sleep(30)
-    # jenkinsRestartServer('"+clusterName+"','"+userName+"')
-    jenkinsGetSSHPublicKey('jenkins','charles')
+    # jenkinsRestartServer("us-west1-a","charles")
+    # print("DONE")
+    # time.sleep(30)
+    # jenkinsCreateSSHKeypair('jenkins','charles')
+    # jenkinsGetSSHPrivateKey('jenkins','charles')
+
+    # before creating job, app needs to be deployed
+    jenkinsCreateJob('jenkins','charles')
+    
 
 if __name__ == "__main__":
     main()

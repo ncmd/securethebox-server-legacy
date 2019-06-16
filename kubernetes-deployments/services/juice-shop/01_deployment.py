@@ -25,21 +25,18 @@ spec:
       containers:
       - name: {serviceName}-{userName}
         image: node:8-jessie
-          ports:
-            - containerPort: 3000
-            - containerPort: 9000
-          command: ["/bin/sh", "-c"]
-          args:
-          - git clone http://gitlab-{userName}/root/{serviceName}-{userName}.git &&
-            cd {serviceName}-{userName} &&
-            npm install &&
-            npm run postinstall &&
-            npm run start & 
-            echo done ;
-            while true ; do continue ; done ;
-        volumeMounts:
-        - mountPath: "/var/log/challenge1"
-          name: task-pv-storage
+        ports:
+          - containerPort: 3000
+          - containerPort: 9000
+        command: ["/bin/sh", "-c"]
+        args:
+        - git clone http://gitlab-{userName}/root/{serviceName}-{userName}.git &&
+          cd {serviceName}-{userName} &&
+          npm install &&
+          npm run postinstall &&
+          npm run start & 
+          echo done ;
+          while true ; do continue ; done ;
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/01_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-deployment.yml', 'w') as yfile:

@@ -5,7 +5,7 @@ from lxml import html
 import urllib
 import gitlab
 import datetime
-from app_controller_jenkins import jenkinsGetSSHPublicKey
+# from app_controller_jenkins import jenkinsGetSSHPublicKey
 
 """
 1. deploy,service,ingress ( ~100 seconds ) - done
@@ -27,6 +27,8 @@ def gitlabCreateProject(clusterName, userName):
     """
     os.chdir('./apps')
     print("CWD:",os.getcwd())
+    print("DELETING EXISTING PROJECT")
+    subprocess.Popen([f"rm -rf juice-shop-"+userName],shell=True).wait()
     # make sure this server has 'git' installed
     subprocess.Popen([f"git clone https://github.com/ncmd/juice-shop.git juice-shop-"+userName],shell=True).wait()
     os.chdir('./juice-shop-'+userName)
@@ -82,7 +84,7 @@ def gitlabPostResetPassword(token,session,clusterName,userName):
     # 5. Submit token form
     # 6. Follow redirect to generated personal access token
 
-def gitlabGeneratePersonalAccessToken():
+def gitlabCreatePersonalAccessToken():
     # 1
     url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
@@ -152,8 +154,8 @@ def gitlabGeneratePersonalAccessToken():
 
     # 1. make repository public
     # Settings > General > Visibility 
-def gitlabMakeProjectPublic():
-    url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+def gitlabMakeProjectPublic(clusterName,userName):
+    url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
     session_cookie1 = response1.headers['Set-Cookie'].split(';')
     # print("Guest Session Cookie:",session_cookie1[0])
@@ -164,7 +166,7 @@ def gitlabMakeProjectPublic():
     # print("Guest Encoded authenticity_token:",new_auth_token)
 
     # 2
-    url2 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+    url2 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     payload = "utf8=%E2%9C%93&authenticity_token="+new_auth_token+"&user%5Blogin%5D=root&user%5Bpassword%5D=Changeme&user%5Bremember_me%5D=0"
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
@@ -179,9 +181,9 @@ def gitlabMakeProjectPublic():
     # print("User authenticity_token2:",authtoken2)
 
     # 3
-    url3 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles/edit"
+    url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+"/edit"
     headers3 = {
-    'Host': "gitlab-charles.us-west1-a.securethebox.us",
+    'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
     'Cookie': session_cookie2
     }
     response3 = requests.request("GET", url3, headers=headers3)
@@ -191,7 +193,7 @@ def gitlabMakeProjectPublic():
     authtoken3 = tree3.xpath('//meta[@name="csrf-token"]')
     print("User csrf-token for personal_access_token page:",authtoken3[0].attrib['content'])
 
-    url4 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles"
+    url4 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName
     # "Cookie": _gitlab_session=a7d17d16b5a99b5207e10782fd03a9bb
     # X-CSRF-Token: DjGSD8p5IGNTrEtOhDHcK6AkUfr28iyw+dpX95Czs1mHVAZdiNzxDiuC+gO2s+fSfe8GvkBzii3RYT4rROcwfg==
     headers4 = {
@@ -208,8 +210,8 @@ def gitlabMakeProjectPublic():
     # 2. enable outbound requests
     # http://gitlab-charles.us-west1-a.securethebox.us/admin/application_settings/network
     # Allow requests to the local network from hooks and services
-def gitlabProjectAllowOutbound():
-    url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+def gitlabProjectAllowOutbound(clusterName,userName):
+    url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
     session_cookie1 = response1.headers['Set-Cookie'].split(';')
     # print("Guest Session Cookie:",session_cookie1[0])
@@ -220,11 +222,11 @@ def gitlabProjectAllowOutbound():
     # print("Guest Encoded authenticity_token:",new_auth_token)
 
     # 2
-    url2 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+    url2 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     payload = "utf8=%E2%9C%93&authenticity_token="+new_auth_token+"&user%5Blogin%5D=root&user%5Bpassword%5D=Changeme&user%5Bremember_me%5D=0"
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie1[0]
         }
     response2 = requests.request("POST", url2, data=payload, headers=headers, allow_redirects=True)
@@ -235,9 +237,9 @@ def gitlabProjectAllowOutbound():
     # print("User authenticity_token2:",authtoken2)
 
     # 3
-    url3 = "http://gitlab-charles.us-west1-a.securethebox.us/admin/application_settings/network"
+    url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/admin/application_settings/network"
     headers3 = {
-    'Host': "gitlab-charles.us-west1-a.securethebox.us",
+    'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
     'Cookie': session_cookie2
     }
     response3 = requests.request("GET", url3, headers=headers3)
@@ -247,7 +249,7 @@ def gitlabProjectAllowOutbound():
     authtoken3 = tree3.xpath('//meta[@name="csrf-token"]')
     print("User csrf-token for personal_access_token page:",authtoken3[0].attrib['content'])
 
-    url4 = "http://gitlab-charles.us-west1-a.securethebox.us/admin/application_settings"
+    url4 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/admin/application_settings"
     headers4 = {
         "Cookie": session_cookie3,
         "Content-Type": "application/x-www-form-urlencoded"
@@ -264,8 +266,8 @@ def gitlabProjectAllowOutbound():
     # enable write access
     # settings > Repository > Deploy keys
     # 
-def gitlabProjectAddDeployKey(jenkins_public_key):
-    url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+def gitlabProjectAddDeployKey(jenkins_public_key,clusterName,userName):
+    url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
     session_cookie1 = response1.headers['Set-Cookie'].split(';')
     # print("Guest Session Cookie:",session_cookie1[0])
@@ -276,11 +278,11 @@ def gitlabProjectAddDeployKey(jenkins_public_key):
     # print("Guest Encoded authenticity_token:",new_auth_token)
 
     # 2
-    url2 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+    url2 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     payload = "utf8=%E2%9C%93&authenticity_token="+new_auth_token+"&user%5Blogin%5D=root&user%5Bpassword%5D=Changeme&user%5Bremember_me%5D=0"
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie1[0]
         }
     response2 = requests.request("POST", url2, data=payload, headers=headers, allow_redirects=True)
@@ -291,9 +293,9 @@ def gitlabProjectAddDeployKey(jenkins_public_key):
     # print("User authenticity_token2:",authtoken2)
 
     # 3
-    url3 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles/settings/repository"
+    url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-charles/settings/repository"
     headers3 = {
-    'Host': "gitlab-charles.us-west1-a.securethebox.us",
+    'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
     'Cookie': session_cookie2
     }
     response3 = requests.request("GET", url3, headers=headers3)
@@ -303,7 +305,7 @@ def gitlabProjectAddDeployKey(jenkins_public_key):
     authtoken3 = tree3.xpath('//meta[@name="csrf-token"]')
     print("User csrf-token for personal_access_token page:",authtoken3[0].attrib['content'])
 
-    url4 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles/deploy_keys"
+    url4 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+"/deploy_keys"
     headers4 = {
         "Cookie": session_cookie3,
         "Content-Type": "application/x-www-form-urlencoded"
@@ -319,14 +321,11 @@ def gitlabProjectAddDeployKey(jenkins_public_key):
     response4 = requests.request("POST", url4, headers=headers4, data=payload4)
     print("Response code:",response4.status_code)
 
-    # source code management in jenkins:
-    # http://gitlab-charles/root/juice-shop-charles
-
     # integrations
     # Add webhook url and disable ssl verification
     # http://jenkins-charles/project/deploy-to-kubernetes
-def gitlabProjectAddWebhook():
-    url1 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+def gitlabProjectAddWebhook(clusterName,userName):
+    url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
     session_cookie1 = response1.headers['Set-Cookie'].split(';')
     # print("Guest Session Cookie:",session_cookie1[0])
@@ -338,11 +337,11 @@ def gitlabProjectAddWebhook():
     # print(response1.status_code)
 
     # 2
-    url2 = "http://gitlab-charles.us-west1-a.securethebox.us/users/sign_in"
+    url2 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     payload = "utf8=%E2%9C%93&authenticity_token="+new_auth_token+"&user%5Blogin%5D=root&user%5Bpassword%5D=Changeme&user%5Bremember_me%5D=0"
     headers = {
         'Content-Type': "application/x-www-form-urlencoded",
-        'Host': "gitlab-charles.us-west1-a.securethebox.us",
+        'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
         'Cookie': session_cookie1[0]
         }
     response2 = requests.request("POST", url2, data=payload, headers=headers, allow_redirects=True)
@@ -354,9 +353,9 @@ def gitlabProjectAddWebhook():
     # print(response2.status_code)
 
     # 3
-    url3 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles/settings/integrations"
+    url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+"/settings/integrations"
     headers3 = {
-    'Host': "gitlab-charles.us-west1-a.securethebox.us",
+    'Host': "gitlab-"+userName+"."+clusterName+".securethebox.us",
     'Cookie': session_cookie2
     }
     response3 = requests.request("GET", url3, headers=headers3)
@@ -368,7 +367,7 @@ def gitlabProjectAddWebhook():
     # print(response3.status_code)
 
     # this url changes!!!
-    url4 = "http://gitlab-charles.us-west1-a.securethebox.us/root/juice-shop-charles/hooks"
+    url4 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+"/hooks"
     headers4 = {
         "Cookie": session_cookie3,
         "Content-Type": "application/x-www-form-urlencoded"
@@ -380,14 +379,24 @@ def gitlabProjectAddWebhook():
     # print("Response code:",response4.status_code)
 
 def main():
-    # reset_token,session_cookie = gitlabGetResetPasswordToken('us-west1-a','charles')
-    # gitlabPostResetPassword(reset_token,session_cookie,'us-west1-a','charles')
-    # gitlabCreateProject('us-west1-a', 'charles')
-    # gitlabMakeProjectPublic()
-    # gitlabProjectAllowOutbound()
-    # gitlabProjectAddWebhook()
-    # public_key = jenkinsGetSSHPublicKey('jenkins','charles')
-    # gitlabProjectAddDeployKey(public_key)
+    try:
+        reset_token,session_cookie = gitlabGetResetPasswordToken('us-west1-a','charles')
+        gitlabPostResetPassword(reset_token,session_cookie,'us-west1-a','charles')
+        gitlabCreateProject('us-west1-a', 'charles')
+        gitlabMakeProjectPublic('us-west1-a', 'charles')
+        gitlabProjectAllowOutbound('us-west1-a', 'charles')
+        gitlabProjectAddWebhook('us-west1-a', 'charles')
+
+        # Install deploy key
+        # public_key = jenkinsGetSSHPublicKey('jenkins','charles')
+        # gitlabProjectAddDeployKey(public_key)
+
+        # After finishing this, need to deploy app
+
+
+    except:
+        print("Already did it")
+   
 
 if __name__ == "__main__":
     main()

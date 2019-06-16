@@ -7,7 +7,29 @@ import time
 import json
 import requests
 import os
-from app_controller_gitlab import (gitlabGetResetPasswordToken, gitlabPostResetPassword)
+from app_controller_gitlab import (
+    gitlabGetResetPasswordToken, 
+    gitlabPostResetPassword,
+    gitlabCreatePersonalAccessToken,
+    gitlabCreateProject,
+    gitlabMakeProjectPublic,
+    gitlabProjectAddDeployKey,
+    gitlabProjectAddWebhook,
+    gitlabProjectAllowOutbound
+)
+
+from app_controller_jenkins import (
+    jenkinsConnectGitlab,
+    jenkinsCreateJob,
+    jenkinsCreateSSHKeypair,
+    jenkinsCredentialsAddSSHPrivateKey,
+    jenkinsGetSSHPrivateKey,
+    jenkinsGetSSHPublicKey,
+    jenkinsInstallPlugin,
+    jenkinsJobAddSourceCodeManagement,
+    jenkinsRestartServer
+)
+
 
 '''
 TODO:
@@ -418,20 +440,50 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesIngressPod(clusterName, 'traefik', action)
         # 3. Generate Yaml Service Files
         time.sleep(10)
+        # SETUP GITLAB
+        generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
+        manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
+        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
+        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
+        time.sleep(100)
+        reset_token,session_cookie = gitlabGetResetPasswordToken(clusterName,userName)
+        gitlabPostResetPassword(reset_token,session_cookie,clusterName,userName)
+        gitlabCreateProject(clusterName, userName)
+        gitlabMakeProjectPublic(clusterName, userName)
+        gitlabProjectAllowOutbound(clusterName, userName)
+        gitlabProjectAddWebhook(clusterName, userName)
+        # SETUP APP SERVER
+        os.chdir('..')
+        os.chdir('..')
+        print("---------------------------CWD:",os.getcwd())
+        generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
+        manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        # wait for app to fully deploy
+        time.sleep(120)
+        # SETUP JENKINS
+        jenkinsInstallPlugin("us-west1-a","charles")
+        time.sleep(30)
+        api_token = gitlabCreatePersonalAccessToken()
+        print("API TOKEN:",api_token)
+        jenkinsConnectGitlab(api_token,"us-west1-a","charles")
+        time.sleep(30)
+        jenkinsRestartServer("us-west1-a","charles")
+        print("DONE")
+        time.sleep(30)
+        jenkinsCreateSSHKeypair('jenkins','charles')
+        jenkinsGetSSHPrivateKey('jenkins','charles')
         # generateKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
-        # generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
+        
         # generateKubernetesServicesYaml(clusterName, 'splunk',userName)
         # generateKubernetesServicesYaml(clusterName, 'splunk-universal-forwarder',userName)
-        generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
-        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
+        
         # generateKubernetesPodsYaml(clusterName, 'kali-linux',userName)
         # 4. Deploy Service pods
         # manageKubernetesServicesPod(clusterName,'nginx-modsecurity', userName, action)
-        # manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        
         # manageKubernetesServicesPod(clusterName,'splunk', userName, action)
         # manageKubernetesServicesPod(clusterName,'splunk-universal-forwarder',userName, action)
-        manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
-        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
+        
         # manageKubernetesPods(clusterName,'kali-linux',userName, action)
         # manageKubernetesServicesPod(clusterName,'wireshark',userName, action)
 

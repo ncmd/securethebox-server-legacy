@@ -36,7 +36,7 @@ def jenkinsInstallPlugin(clusterName,userName):
         }
     response = requests.request("POST", url, data=payload, headers=headers)
     print(response.status_code)
-    print(response.text)
+    print("Plugins should be installed")
 
 def jenkinsRestartServer(clusterName,userName):
     url = "http://jenkins-"+userName+"."+clusterName+".securethebox.us/restart"
@@ -68,7 +68,7 @@ def jenkinsConnectGitlab(api_token,clusterName,userName):
     payload2 = "apiTokenId=gitlab-"+userName+"-root-token-id&clientBuilderId=autodetect&url=http%3A%2F%2Fgitlab-"+userName+"&ignoreCertificateErrors=false"
     response2 = requests.request("POST",url2, data=payload2, headers=headers2)
     # Response should be Success
-    print("RESPONSE 2:",response2.text)
+    print("RESPONSE 2:",response2.status_code)
 
     # 3. Apply
     url3 = "http://jenkins-"+userName+"."+clusterName+".securethebox.us/configSubmit"
@@ -78,7 +78,8 @@ def jenkinsConnectGitlab(api_token,clusterName,userName):
     payload3 = "system_message=&_.numExecutors=2&_.labelString=&master.mode=NORMAL&_.quietPeriod=5&_.scmCheckoutRetryCount=0&namingStrategy=0&stapler-class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24DefaultProjectNamingStrategy&stapler-class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&%24class=jenkins.model.ProjectNamingStrategy%24PatternProjectNamingStrategy&_.namePattern=.*&_.description=&durabilityHint=null&_.usageStatisticsCollected=on&_.useAuthenticatedEndpoint=on&_.name=gitlab-"+userName+"-root-connection&id=com.dabsquared.gitlabjenkins.connection.GitLabConnection%40b025587&_.url=http%3A%2F%2Fgitlab-"+userName+"&_.apiTokenId=gitlab-"+userName+"-root-token-id&_.clientBuilderId=autodetect&_.connectionTimeout=10&_.readTimeout=10&_.appInsightsEnabled=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&administrativeMonitor=on&_.url=http%3A%2F%2Fjenkins-"+userName+"."+clusterName+".securethebox.us%2F&_.adminAddress=address+not+configured+yet+%3Cnobody%40nowhere%3E&_.globalConfigName=&_.globalConfigEmail=&_.shell=&_.dockerUrl=&_.dockerVersion=&_.dockerCertPath=&_.smtpServer=&_.defaultSuffix=&_.smtpAuthUserName=&_.smtpAuthPasswordSecret=&_.smtpPort=&_.replyToAddress=&_.charset=UTF-8&sendTestMailTo=&core%3Aapply=&json=%7B%22system_message%22%3A+%22%22%2C+%22jenkins-model-MasterBuildConfiguration%22%3A+%7B%22numExecutors%22%3A+%222%22%2C+%22labelString%22%3A+%22%22%2C+%22mode%22%3A+%22NORMAL%22%7D%2C+%22jenkins-model-GlobalQuietPeriodConfiguration%22%3A+%7B%22quietPeriod%22%3A+%225%22%7D%2C+%22jenkins-model-GlobalSCMRetryCountConfiguration%22%3A+%7B%22scmCheckoutRetryCount%22%3A+%220%22%7D%2C+%22jenkins-model-GlobalProjectNamingStrategyConfiguration%22%3A+%7B%7D%2C+%22jenkins-model-GlobalNodePropertiesConfiguration%22%3A+%7B%22globalNodeProperties%22%3A+%7B%7D%7D%2C+%22org-jenkinsci-plugins-workflow-flow-GlobalDefaultFlowDurabilityLevel%22%3A+%7B%22durabilityHint%22%3A+%22null%22%7D%2C+%22hudson-model-UsageStatistics%22%3A+%7B%22usageStatisticsCollected%22%3A+%7B%7D%7D%2C+%22com-dabsquared-gitlabjenkins-connection-GitLabConnectionConfig%22%3A+%7B%22useAuthenticatedEndpoint%22%3A+true%2C+%22connections%22%3A+%7B%22name%22%3A+%22gitlab-"+userName+"-root-connection%22%2C+%22id%22%3A+%22com.dabsquared.gitlabjenkins.connection.GitLabConnection%40b025587%22%2C+%22url%22%3A+%22http%3A%2F%2Fgitlab-"+userName+"%22%2C+%22apiTokenId%22%3A+%22gitlab-"+userName+"-root-token-id%22%2C+%22clientBuilderId%22%3A+%22autodetect%22%2C+%22ignoreCertificateErrors%22%3A+false%2C+%22connectionTimeout%22%3A+%2210%22%2C+%22readTimeout%22%3A+%2210%22%7D%7D%2C+%22app-insights-plugin-configuration%22%3A+%7B%22appInsightsEnabled%22%3A+true%7D%2C+%22jenkins-management-AdministrativeMonitorsConfiguration%22%3A+%7B%22administrativeMonitor%22%3A+%5B%22hudson.PluginManager%24PluginCycleDependenciesMonitor%22%2C+%22hudson.PluginManager%24PluginUpdateMonitor%22%2C+%22hudson.PluginWrapper%24PluginWrapperAdministrativeMonitor%22%2C+%22hudsonHomeIsFull%22%2C+%22hudson.diagnosis.NullIdDescriptorMonitor%22%2C+%22OldData%22%2C+%22hudson.diagnosis.ReverseProxySetupMonitor%22%2C+%22hudson.diagnosis.TooManyJobsButNoView%22%2C+%22hudson.model.UpdateCenter%24CoreUpdateMonitor%22%2C+%22hudson.node_monitors.MonitorMarkedNodeOffline%22%2C+%22hudson.triggers.SCMTrigger%24AdministrativeMonitorImpl%22%2C+%22jenkins.diagnosis.HsErrPidList%22%2C+%22jenkins.diagnostics.CompletedInitializationMonitor%22%2C+%22jenkins.diagnostics.RootUrlNotSetMonitor%22%2C+%22jenkins.diagnostics.SecurityIsOffMonitor%22%2C+%22jenkins.diagnostics.URICheckEncodingMonitor%22%2C+%22jenkins.model.DownloadSettings%24Warning%22%2C+%22jenkins.model.Jenkins%24EnforceSlaveAgentPortAdministrativeMonitor%22%2C+%22jenkins.security.QueueItemAuthenticatorMonitor%22%2C+%22jenkins.security.RekeySecretAdminMonitor%22%2C+%22jenkins.security.UpdateSiteWarningsMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyDisabledDefaultAdministrativeMonitor%22%2C+%22jenkins.security.apitoken.ApiTokenPropertyEnabledNewLegacyAdministrativeMonitor%22%2C+%22legacyApiToken%22%2C+%22jenkins.security.csrf.CSRFAdministrativeMonitor%22%2C+%22slaveToMasterAccessControl%22%2C+%22jenkins.security.s2m.MasterKillSwitchWarning%22%2C+%22jenkins.slaves.DeprecatedAgentProtocolMonitor%22%5D%7D%2C+%22jenkins-model-JenkinsLocationConfiguration%22%3A+%7B%22url%22%3A+%22http%3A%2F%2Fjenkins-"+userName+"."+clusterName+".securethebox.us%2F%22%2C+%22adminAddress%22%3A+%22address+not+configured+yet+%3Cnobody%40nowhere%3E%22%7D%2C+%22hudson-plugins-git-GitSCM%22%3A+%7B%22globalConfigName%22%3A+%22%22%2C+%22globalConfigEmail%22%3A+%22%22%2C+%22createAccountBasedOnEmail%22%3A+false%7D%2C+%22hudson-tasks-Shell%22%3A+%7B%22shell%22%3A+%22%22%7D%2C+%22org-jenkinsci-plugins-dockerbuildstep-DockerBuilder%22%3A+%7B%22dockerUrl%22%3A+%22%22%2C+%22dockerVersion%22%3A+%22%22%2C+%22dockerCertPath%22%3A+%22%22%7D%2C+%22hudson-tasks-Mailer%22%3A+%7B%22smtpServer%22%3A+%22%22%2C+%22defaultSuffix%22%3A+%22%22%2C+%22useSsl%22%3A+false%2C+%22smtpPort%22%3A+%22%22%2C+%22replyToAddress%22%3A+%22%22%2C+%22charset%22%3A+%22UTF-8%22%7D%2C+%22core%3Aapply%22%3A+%22%22%7D&Submit=Save"
     # Response should be saved
     response3 = requests.request("POST",url3, data=payload3, headers=headers3)
-    print("RESPONSE 3:",response3.text)
+    print("RESPONSE 3:",response3.status_code)
+    print("Jenkins should be connected to gitlab")
 
     # generate ssh keypair with no password (within container)
 def jenkinsCreateSSHKeypair(serviceName,userName):
@@ -101,7 +102,7 @@ def jenkinsGetSSHPrivateKey(serviceName,userName):
     print("CONTAINER ID:",container_id)
     private = check_output(["docker", "exec","-i",container_id,"bash","-c","cat id_rsa"])
     ssh_private_key = private.decode("utf-8")
-    print("PRIVATE KEY:",ssh_private_key)
+    # print("PRIVATE KEY:",ssh_private_key)
     return ssh_private_key
 
 def jenkinsJobAddSourceCodeManagement():
@@ -110,25 +111,35 @@ def jenkinsJobAddSourceCodeManagement():
     print()
 
 def jenkinsCredentialsAddSSHPrivateKey(private_key):
-    url1 = "http://jenkins-charles.us-west1-a.securethebox.us/descriptor/com.cloudbees.plugins.credentials.CredentialsSelectHelper/resolver/com.cloudbees.plugins.credentials.CredentialsSelectHelper$SystemContextResolver/provider/com.cloudbees.plugins.credentials.SystemCredentialsProvider$ProviderImpl/context/jenkins/addCredentials"
-    # title = jenkins-charles-root-private-key
+    # url1 = "http://jenkins-charles.us-west1-a.securethebox.us/descriptor/com.cloudbees.plugins.credentials.CredentialsSelectHelper/resolver/com.cloudbees.plugins.credentials.CredentialsSelectHelper$SystemContextResolver/provider/com.cloudbees.plugins.credentials.SystemCredentialsProvider$ProviderImpl/context/jenkins/addCredentials"
+    url1 = "http://jenkins-charles.us-west1-a.securethebox.us/credentials/store/system/domain/_/createCredentials"
     headers1 = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
-    private_key_encoded = str(urllib.parse.quote(private_key))
-    payload1 = "_.domain=_&_.scope=GLOBAL&_.username=&_.password=&_.id=&_.description=&stapler-class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&stapler-class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&%24class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&_.scope=GLOBAL&_.id=jenkins-charles-root-private-key&_.description=&_.username=jenkins&id47.privateKeySource=0&_.privateKey=\
+    # print(private_key)
+    # private_key_encoded = urllib.parse.quote_plus(private_key)
+    # print(private_key_encoded)
+    print(private_key)
+    private_key_encoded = urllib.parse.quote_plus(private_key.rstrip())
+    private_key_encoded_nl = urllib.parse.quote_plus(str(private_key.rstrip().replace("\n","\\n")))
+    print(private_key_encoded)
+    print(private_key_encoded_nl)
+
+    payload1 =  "_.scope=GLOBAL&_.username=&_.password=&_.id=&_.description=&stapler-class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&stapler-class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&%24class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&stapler-class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&%24class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&stapler-class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&%24class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&_.scope=GLOBAL&_.id=jenkins-charles-root-private-key&_.description=&_.username=jenkins&id270.privateKeySource=0\&\_.privateKey=\
         "+private_key_encoded+"\
-            &stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&_.passphrase=&stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&stapler-class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&json=%7B%22domain%22%3A+%22_%22%2C+%22%22%3A+%222%22%2C+%22credentials%22%3A+%7B%22scope%22%3A+%22GLOBAL%22%2C+%22id%22%3A+%22jenkins-charles-root-private-key%22%2C+%22description%22%3A+%22%22%2C+%22username%22%3A+%22jenkins%22%2C+%22privateKeySource%22%3A+%7B%22value%22%3A+%220%22%2C+%22privateKey%22%3A+%22\
-                "+private_key_encoded+"\
-                    %22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%7D%2C+%22passphrase%22%3A+%22%22%2C+%22%24redact%22%3A+%22passphrase%22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%7D%7D"
+            &stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&_.passphrase=&stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&stapler-class=org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl&%24class=org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl&stapler-class=org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl&%24class=org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl&stapler-class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&json=%7B%22%22%3A+%224%22%2C+%22credentials%22%3A+%7B%22scope%22%3A+%22GLOBAL%22%2C+%22id%22%3A+%22jenkins-charles-root-private-key%22%2C+%22description%22%3A+%22%22%2C+%22username%22%3A+%22jenkins%22%2C+%22privateKeySource%22%3A+%7B%22value%22%3A+%220%22%2C+%22privateKey%22%3A+%22\
+                "+private_key_encoded_nl+"\
+                    %22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource%22%7D%2C+%22passphrase%22%3A+%22%22%2C+%22%24redact%22%3A+%22passphrase%22%2C+%22stapler-class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%2C+%22%24class%22%3A+%22com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%22%7D%7D&Submit=OK"
     response1 = requests.request("POST",url1, data=payload1, headers=headers1)
     print(response1.status_code)
 
+def jenkinsCredentialsAddSCM():
+    print()
 
 def jenkinsCreateJob(serviceName,userName):
     # Need to install plugins first
     # job title: deploy-to-kubernetes
-    url1 = "http://jenkins-charles.us-west1-a.securethebox.us/view/all/createItem"
+    url1 = "http://jenkins-"+userName+".us-west1-a.securethebox.us/view/all/createItem"
     headers1 = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
@@ -137,14 +148,13 @@ def jenkinsCreateJob(serviceName,userName):
     print(response1.status_code)
 
     # add private key to job
-    private_key = jenkinsGetSSHPublicKey('jenkins','charles')
+    private_key = jenkinsGetSSHPrivateKey(serviceName,userName)
     jenkinsCredentialsAddSSHPrivateKey(private_key)
-
-    # add shell command
-    pod_id = kubernetesGetPodId(serviceName,userName)
+    # add shell command to juice-shop app
+    pod_id = kubernetesGetPodId('juice-shop',userName)
     container_id = dockerGetContainerId(pod_id)
     # save job
-    url2 = "http://jenkins-charles.us-west1-a.securethebox.us/job/deploy-to-kubernetes/configSubmit"
+    url2 = "http://jenkins-"+userName+".us-west1-a.securethebox.us/job/deploy-to-kubernetes/configSubmit"
     headers2 = {
         "Content-Type": "application/x-www-form-urlencoded"
     }
@@ -153,13 +163,6 @@ def jenkinsCreateJob(serviceName,userName):
     response2 = requests.request("POST",url2, data=payload2, headers=headers2)
     print(response2.status_code)
 
-    # ssh-keygen -f id_rsa -t rsa -N ''
-    # cat /root/.ssh/id_rsa
-    # cat /root/.ssh/id_rsa.pub
-    # id = jenkins-charles-root-private-key
-
-    # create job
-    # name: deploy-to-kubernetes
     
     # source code management in jenkins (must make repo public and add public key first):
     # Repository URL: http://gitlab-"+userName+"/root/juice-shop-"+userName
@@ -179,10 +182,12 @@ def main():
     # time.sleep(30)
     # jenkinsCreateSSHKeypair('jenkins','charles')
     # jenkinsGetSSHPrivateKey('jenkins','charles')
-
     # before creating job, app needs to be deployed
-    jenkinsCreateJob('jenkins','charles')
-    
+    # jenkinsCreateJob('jenkins','charles')
+    private_key = jenkinsGetSSHPrivateKey('jenkins','charles')
+    # print(private_key)
+    jenkinsCredentialsAddSSHPrivateKey(private_key)
+    print("This is done")
 
 if __name__ == "__main__":
     main()

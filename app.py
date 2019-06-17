@@ -15,7 +15,8 @@ from app_controller_gitlab import (
     gitlabMakeProjectPublic,
     gitlabProjectAddDeployKey,
     gitlabProjectAddWebhook,
-    gitlabProjectAllowOutbound
+    gitlabProjectAllowOutbound,
+    gitlabProjectAddDeployKey
 )
 
 from app_controller_jenkins import (
@@ -446,6 +447,7 @@ def manageChallenge1(clusterName, userName, action):
         generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
         manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
         time.sleep(100)
+        print("Sleeping 100 seconds")
         reset_token,session_cookie = gitlabGetResetPasswordToken(clusterName,userName)
         gitlabPostResetPassword(reset_token,session_cookie,clusterName,userName)
         gitlabCreateProject(clusterName, userName)
@@ -461,17 +463,23 @@ def manageChallenge1(clusterName, userName, action):
         # wait for app to fully deploy
         time.sleep(120)
         # SETUP JENKINS
-        jenkinsInstallPlugin("us-west1-a","charles")
+        jenkinsInstallPlugin("us-west1-a",userName)
         time.sleep(30)
         api_token = gitlabCreatePersonalAccessToken()
         print("API TOKEN:",api_token)
-        jenkinsConnectGitlab(api_token,"us-west1-a","charles")
+        jenkinsConnectGitlab(api_token,"us-west1-a",userName)
         time.sleep(30)
-        jenkinsRestartServer("us-west1-a","charles")
+        jenkinsRestartServer("us-west1-a",userName)
         print("DONE")
         time.sleep(30)
-        jenkinsCreateSSHKeypair('jenkins','charles')
-        jenkinsGetSSHPrivateKey('jenkins','charles')
+        jenkinsCreateSSHKeypair('jenkins',userName)
+        jenkinsCreateJob('jenkins',userName)
+        public_key = jenkinsGetSSHPublicKey('jenkins',userName)
+        gitlabProjectAddDeployKey(public_key,clusterName,userName)
+        print("EVERYTHING SHOULD BE DONE!")
+        # 
+
+
         # generateKubernetesServicesYaml(clusterName, 'nginx-modsecurity',userName)
         
         # generateKubernetesServicesYaml(clusterName, 'splunk',userName)

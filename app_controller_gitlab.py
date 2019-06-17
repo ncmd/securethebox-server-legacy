@@ -374,7 +374,7 @@ def gitlabProjectAddWebhook(clusterName,userName):
     }
     auth_token4 = urllib.parse.quote(authtoken3[0].attrib['content'])
     # print("auth_token4",auth_token4)
-    payload4 = "utf8=%E2%9C%93&authenticity_token="+auth_token4+"&hook%5Burl%5D=http%3A%2F%2Fjenkins-charles%2Fproject%2Fdeploy-to-kubernetes&hook%5Btoken%5D=&hook%5Bpush_events%5D=0&hook%5Bpush_events%5D=1&hook%5Bpush_events_branch_filter%5D=&hook%5Btag_push_events%5D=0&hook%5Bnote_events%5D=0&hook%5Bconfidential_note_events%5D=0&hook%5Bissues_events%5D=0&hook%5Bconfidential_issues_events%5D=0&hook%5Bmerge_requests_events%5D=0&hook%5Bjob_events%5D=0&hook%5Bpipeline_events%5D=0&hook%5Bwiki_page_events%5D=0&hook%5Benable_ssl_verification%5D=0"
+    payload4 = "utf8=%E2%9C%93&authenticity_token="+auth_token4+"&hook%5Burl%5D=http%3A%2F%2Fjenkins-charles%3A8080%2Fproject%2Fdeploy-to-kubernetes&hook%5Btoken%5D=&hook%5Bpush_events%5D=0&hook%5Bpush_events%5D=1&hook%5Bpush_events_branch_filter%5D=&hook%5Btag_push_events%5D=0&hook%5Bnote_events%5D=0&hook%5Bconfidential_note_events%5D=0&hook%5Bissues_events%5D=0&hook%5Bconfidential_issues_events%5D=0&hook%5Bmerge_requests_events%5D=0&hook%5Bjob_events%5D=0&hook%5Bpipeline_events%5D=0&hook%5Bwiki_page_events%5D=0&hook%5Benable_ssl_verification%5D=0"
     response4 = requests.request("POST", url4, headers=headers4, data=payload4, allow_redirects=True)
     # print("Response code:",response4.status_code)
 

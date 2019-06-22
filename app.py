@@ -443,45 +443,45 @@ def manageChallenge1(clusterName, userName, action):
         # 2. Deploy Ingress Pods
         manageKubernetesIngressPod(clusterName, 'traefik', action)
         # 3. Generate Yaml Service Files
-        time.sleep(10)
-        # SETUP GITLAB
-        generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
-        manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
-        generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
-        manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
-        print("Sleeping 100 seconds")
-        time.sleep(100)
-        print("Finished sleeping ...")
-        reset_token,session_cookie = gitlabGetResetPasswordToken(clusterName,userName)
-        gitlabPostResetPassword(reset_token,session_cookie,clusterName,userName)
-        gitlabCreateProject(clusterName, userName)
-        gitlabMakeProjectPublic(clusterName, userName)
-        gitlabProjectAllowOutbound(clusterName, userName)
-        gitlabProjectAddWebhook(clusterName, userName)
-        # SETUP APP SERVER
-        os.chdir('..')
-        os.chdir('..')
-        print("---------------------------CWD:",os.getcwd())
-        generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
-        manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
-        # wait for app to fully deploy
-        time.sleep(120)
-        # SETUP JENKINS
-        jenkinsInstallPlugin("us-west1-a",userName)
-        time.sleep(30)
-        api_token = gitlabCreatePersonalAccessToken()
-        print("API TOKEN:",api_token)
-        jenkinsConnectGitlab(api_token,"us-west1-a",userName)
-        time.sleep(30)
-        jenkinsRestartServer("us-west1-a",userName)
-        print("DONE")
-        time.sleep(30)
-        jenkinsCreateSSHKeypair('jenkins',userName)
-        jenkinsCreateJob('jenkins',userName)
-        public_key = jenkinsGetSSHPublicKey('jenkins',userName)
-        gitlabProjectAddDeployKey(public_key,clusterName,userName)
-        end = time.time()
-        print("EVERYTHING SHOULD BE DONE! Time elapsed:",end - start)
+        # time.sleep(10)
+        # # SETUP GITLAB
+        # generateKubernetesServicesYaml(clusterName, 'gitlab',userName)
+        # manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
+        # generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
+        # manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
+        # print("Sleeping 100 seconds")
+        # time.sleep(100)
+        # print("Finished sleeping ...")
+        # reset_token,session_cookie = gitlabGetResetPasswordToken(clusterName,userName)
+        # gitlabPostResetPassword(reset_token,session_cookie,clusterName,userName)
+        # gitlabCreateProject(clusterName, userName)
+        # gitlabMakeProjectPublic(clusterName, userName)
+        # gitlabProjectAllowOutbound(clusterName, userName)
+        # gitlabProjectAddWebhook(clusterName, userName)
+        # # SETUP APP SERVER
+        # os.chdir('..')
+        # os.chdir('..')
+        # print("---------------------------CWD:",os.getcwd())
+        # generateKubernetesServicesYaml(clusterName, 'juice-shop',userName)
+        # manageKubernetesServicesPod(clusterName,'juice-shop', userName, action)
+        # # wait for app to fully deploy
+        # time.sleep(120)
+        # # SETUP JENKINS
+        # jenkinsInstallPlugin("us-west1-a",userName)
+        # time.sleep(30)
+        # api_token = gitlabCreatePersonalAccessToken()
+        # print("API TOKEN:",api_token)
+        # jenkinsConnectGitlab(api_token,"us-west1-a",userName)
+        # time.sleep(30)
+        # jenkinsRestartServer("us-west1-a",userName)
+        # print("DONE")
+        # time.sleep(30)
+        # jenkinsCreateSSHKeypair('jenkins',userName)
+        # jenkinsCreateJob('jenkins',userName)
+        # public_key = jenkinsGetSSHPublicKey('jenkins',userName)
+        # gitlabProjectAddDeployKey(public_key,clusterName,userName)
+        # end = time.time()
+        # print("EVERYTHING SHOULD BE DONE! Time elapsed:",end - start)
         
         # 
 
@@ -542,7 +542,7 @@ def manageChallenge1(clusterName, userName, action):
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
         # 6. Clean up the rest of environment (note this will close everything... do not do this in production)
-        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment,configmap,statefulset --all"],shell=True)
+        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment,configmap,statefulset,ingress,secrets --all"],shell=True)
 
 # Kubernetes API
 class Kubernetes(Resource):

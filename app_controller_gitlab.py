@@ -390,9 +390,7 @@ def main():
         # Install deploy key
         # public_key = jenkinsGetSSHPublicKey('jenkins','charles')
         # gitlabProjectAddDeployKey(public_key)
-
         # After finishing this, need to deploy app
-
 
     except:
         print("Already did it")

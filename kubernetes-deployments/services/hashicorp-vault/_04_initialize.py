@@ -1,23 +1,7 @@
-import subprocess
-from subprocess import check_output
 import requests
 import json
 
-"""
-Start this script
-
-"""
-def hashicorpVaultDeploy():
-    subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_01_config.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_02_service.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_03_deployment.yml"],shell=True).wait()
-
-def hashicorpVaultDestroy():
-    subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_01_config.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_02_service.yml"],shell=True).wait()
-    subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_03_deployment.yml"],shell=True).wait()
-
-def hashicorpVaultInitVaultGetRootTokenKeys():
+def hashicorpVaultInitializeVaultGetRootTokenKeys():
     url1 = "http://localhost:8200/v1/sys/init"
 
     headers1 = {
@@ -60,4 +44,4 @@ def hashicorpVaultAuthenticateMethodToken(root_token):
     print("RESPONSE 1:",response1.text)
 
 if __name__ == "__main__":
-    hashicorpVaultDeploy()
+    hashicorpVaultInitializeVaultGetRootTokenKeys()

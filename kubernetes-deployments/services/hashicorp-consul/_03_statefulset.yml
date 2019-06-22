@@ -1,14 +1,14 @@
 apiVersion: apps/v1beta1
 kind: StatefulSet
 metadata:
-  name: consul
+  name: hashicorp-consul-charles
 spec:
-  serviceName: consul
+  serviceName: hashicorp-consul-charles
   replicas: 5
   template:
     metadata:
       labels:
-        app: consul
+        app: hashicorp-consul-charles
     spec:
       terminationGracePeriodSeconds: 10
       securityContext:
@@ -81,7 +81,7 @@ spec:
       volumes:
         - name: config
           configMap:
-            name: consul
+            name: hashicorp-consul-charles
         - name: tls
           secret:
             secretName: consul

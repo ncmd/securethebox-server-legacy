@@ -1,8 +1,7 @@
-
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: gitlab-charles
+  name: suricata-charles
   annotations:
     kubernetes.io/ingress.class: traefik
     kubernetes.io/preserve-host: "true"
@@ -10,11 +9,10 @@ metadata:
     traefik.frontend.priority: "1"
 spec:
   rules:
-  - host: gitlab-charles.us-west1-a.securethebox.us
+  - host: suricata-charles.us-west1-a.securethebox.us
     http:
       paths:
       - path: /
         backend:
-          serviceName: gitlab-charles
+          serviceName: suricata-charles
           servicePort: http
-              

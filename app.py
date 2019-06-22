@@ -34,6 +34,8 @@ from app_controller_jenkins import (
 
 '''
 TODO:
+- deployment files resource tuning
+
 - get status of pod
     - kubectl get pod --field-selector=status.phase=Succeeded
 
@@ -41,38 +43,38 @@ TODO:
     - https://github.com/splunk/docker-splunk/tree/develop/test_scenarios/kubernetes
     - kubectl port-forward splunk-charles-c76dd785b-h866v 8000:8000
     kubectl port-forward dokku-charles-55bbfd6578-tvrhp 8000:80
+    kubectl port-forward hashicorp-vault-charles-66d99fc8cc-rqb5w 8200:8200
 
 - Generating Answers
     - attacker_ip_address
     - perform sqli/xss
 
-- Install Codebox to edit code
+- Install Codebox to edit code (Perhaps use gitpod browser extension)
     - make it easier to edit code
 
 -  Setup Each user has its own "namespace" in kubernetes
     - https://cloud.google.com/blog/products/gcp/kubernetes-best-practices-organizing-with-namespaces
 
-- Create Network Policies
+- Create Network Policies (for own namespace to prevent docker.socket mount)
     - https://kubernetes.io/docs/concepts/services-networking/network-policies/
 
-- Automated checks to score user
+- Automated checks to score user (somewhat working)
     - Check if service is running
 
-- Timer need to destroy environment after X time
+- Timer need to FREEZE (not destroy) environment after X time
     - After 2hrs
 
 - Generate password for cloudcmd
 
-1. pvc needs to be unique per user
-2. pvc needs to be deleted 
+- pvc needs to be unique per user. pvc needs to be deleted after challenge end
 
-1. add wireshark https://hub.docker.com/r/ffeldhaus/wireshark
-2. need to fix time, timestamp for logs is wrong...
+- add wireshark https://hub.docker.com/r/ffeldhaus/wireshark
 
-4. add attack server
+- need to fix time, timestamp for logs is wrong...
 
+- add attack server (Kali linux pod running script)
 
-kubectl delete po,svc,deployment --all
+- need to add a detection answer to detect attacker activity
 '''
 
 app = Flask(__name__)
@@ -435,6 +437,7 @@ def setupAttacker(clusterName,serviceName,userName):
 def manageChallenge1(clusterName, userName, action):
     print(action,"Challenge 1",clusterName,userName)
     if action == 'apply':
+        start = time.time()
         # 1. Generate Yaml Ingress Files
         generateKubernetesIngressYaml(clusterName, 'traefik')
         # 2. Deploy Ingress Pods
@@ -446,8 +449,9 @@ def manageChallenge1(clusterName, userName, action):
         manageKubernetesServicesPod(clusterName,'gitlab',userName, action)
         generateKubernetesServicesYaml(clusterName, 'jenkins',userName)
         manageKubernetesServicesPod(clusterName,'jenkins',userName, action)
-        time.sleep(100)
         print("Sleeping 100 seconds")
+        time.sleep(100)
+        print("Finished sleeping ...")
         reset_token,session_cookie = gitlabGetResetPasswordToken(clusterName,userName)
         gitlabPostResetPassword(reset_token,session_cookie,clusterName,userName)
         gitlabCreateProject(clusterName, userName)
@@ -476,7 +480,9 @@ def manageChallenge1(clusterName, userName, action):
         jenkinsCreateJob('jenkins',userName)
         public_key = jenkinsGetSSHPublicKey('jenkins',userName)
         gitlabProjectAddDeployKey(public_key,clusterName,userName)
-        print("EVERYTHING SHOULD BE DONE!")
+        end = time.time()
+        print("EVERYTHING SHOULD BE DONE! Time elapsed:",end - start)
+        
         # 
 
 
@@ -536,7 +542,7 @@ def manageChallenge1(clusterName, userName, action):
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
         # 6. Clean up the rest of environment (note this will close everything... do not do this in production)
-        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment --all"],shell=True)
+        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment,configmap,statefulset --all"],shell=True)
 
 # Kubernetes API
 class Kubernetes(Resource):

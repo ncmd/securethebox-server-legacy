@@ -11,8 +11,8 @@ spec:
     app: {serviceName}-{userName}
   ports:
   - name: http
-    targetPort: 14500
-    port: 14500
+    targetPort: 8200
+    port: 80
               """
 
     with open('./kubernetes-deployments/services/'+str(sys.argv[2])+'/02_'+str(sys.argv[1])+'-'+str(sys.argv[2])+'-'+str(sys.argv[3])+'-service.yml', 'w') as yfile:

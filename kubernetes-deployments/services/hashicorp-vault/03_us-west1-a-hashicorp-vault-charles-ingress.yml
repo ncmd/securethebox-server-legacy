@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: jenkins-charles
+  name: hashicorp-vault-charles
   annotations:
     kubernetes.io/ingress.class: traefik
     kubernetes.io/preserve-host: "true"
@@ -10,12 +10,11 @@ metadata:
     traefik.frontend.priority: "1"
 spec:
   rules:
-  - host: jenkins-charles.us-west1-a.securethebox.us
+  - host: hashicorp-vault-charles.us-west1-a.securethebox.us
     http:
       paths:
       - path: /
         backend:
-          serviceName: jenkins-charles
+          serviceName: hashicorp-vault-charles
           servicePort: http
-
               

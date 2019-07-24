@@ -1,5 +1,7 @@
 import subprocess
+import json
 from subprocess import check_output
+
 
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
@@ -22,6 +24,21 @@ def kubernetesGetPodId(serviceName, userName):
                 print("FOUND POD_ID:",pod_id)
         counter+=1
     return pod_id
+
+
+def kubernetesGetPodStatus(podId):
+    command = ["kubectl","get","pod",podId,"-o","json"]
+    command_output = check_output(command)
+    parsedJSON = json.loads(command_output)
+    currentState = parsedJSON["status"]["containerStatuses"][0]["state"]
+    # print(parsedJSON["status"]["containerStatuses"][0]["state"])
+    for i in currentState:
+        print("Key:",i)
+        if i == "running":
+            return True
+        elif i != "running":
+            return False
+
 
 def kubernetesGenerateIngressYaml(clusterName,serviceName):
     print("Generating Ingress Yaml",clusterName,serviceName)
@@ -68,7 +85,7 @@ def kubernetesManageIngressPod(clusterName,serviceName, action):
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/05_{clusterName}-{serviceName}-service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/ingress/{serviceName}/06_{clusterName}-{serviceName}-ingress.yml"],shell=True).wait()
 
-def createPersistentVolumes(action):
+def kubernetesCreatePersistentVolumes(action):
     print('Creating Persistent Volume and Claim')
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True).wait()

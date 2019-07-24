@@ -11,11 +11,13 @@ def hashicorpVaultDeploy():
     subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_01_config.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_02_service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_03_deployment.yml"],shell=True).wait()
+    subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_04_ingress.yml"],shell=True).wait()
 
 def hashicorpVaultDestroy():
     subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_01_config.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_02_service.yml"],shell=True).wait()
     subprocess.Popen([f"kubectl delete -f ./kubernetes-deployments/services/hashicorp-vault/_03_deployment.yml"],shell=True).wait()
+    subprocess.Popen([f"kubectl create -f ./kubernetes-deployments/services/hashicorp-vault/_04_ingress.yml"],shell=True).wait()
 
 def hashicorpVaultInitVaultGetRootTokenKeys():
     url1 = "http://localhost:8200/v1/sys/init"

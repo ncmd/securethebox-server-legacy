@@ -9,9 +9,14 @@ export VAULT_SKIP_VERIFY=true
 
 # vault login root
 
-# vault policy write app-readonly -<<EOF
-# path "database/creds/readonly" {
-#   capabilities = ["read"]
+# vault secrets enable -path=secret/ kv
+# vault kv put secret/foo a=b
+# vault kv get secret/foo
+
+
+# vault policy write app-write -<<EOF
+# path "mycompany/" {
+#   capabilities = ["write"]
 # }
 # EOF
 

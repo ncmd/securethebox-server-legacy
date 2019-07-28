@@ -122,6 +122,7 @@ class Challenge(object):
         del prev_resource["credentials"][target_resource_index]
         self.resources = prev_resource
 
+    # QUESTIONS
     def add_question(self,question_type, question_details):
         questions_size = len(self.questions)
         self.questions[questions_size] = {
@@ -138,6 +139,26 @@ class Challenge(object):
 
     def remove_question_by_index(self, target_index):
         del self.questions[target_index]
+
+    # SUBMISSIONS
+    def add_submission(self, question_number, question_type, question_answer):
+        self.submissions[question_number] = {
+            "time" : datetime.datetime.now(),
+            "type" : question_type,
+            "answer" : question_answer
+        }
+    
+    def edit_submission(self, target_submission_index, question_type, 
+                        question_answer):
+        self.submissions[target_submission_index] = {
+            "time" : datetime.datetime.now(),
+            "type" : question_type,
+            "answer" : question_answer
+        }
+
+    def remove_submission_by_index(self, target_submission_index):
+        del self.submissions[target_submission_index]
+
 
     def to_dict(self):
         this_dict = {

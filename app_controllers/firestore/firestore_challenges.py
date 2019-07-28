@@ -21,8 +21,8 @@ def challenge_1(username):
     this_challenge.difficulty = 3
     this_challenge.grading_criteria = ["vocal","ctf","definitions","video"]
     this_challenge.overview = "Gauging a cadidate's skill on infrastructure security"
-    this_challenge.apps = ["juice-shop","splunk","nginx-modsecurity","gitlab",
-                           "jenkins"]
+    this_challenge.apps = ["juice-shop","splunk","nginx-modsecurity","gitlab","jenkins"]
+    this_challenge.tags = ["interview","technical challenge","application security","infrastructure security"]
 
     # JUICE-SHOP
     juice_shop_index = 0
@@ -92,13 +92,15 @@ def challenge_1(username):
     # hashicorp_consul_index = 6
 
     # QUESTIONS
-    this_challenge.add_question("ctf", "")
-
-
-
-
-
-
+    this_challenge.add_question("vocal", "What happens when you type the command \'wget www.google.com\'?")
+    this_challenge.add_question("vocal", "How does SSL work between a client and server?")
+    this_challenge.add_question("vocal", "What is the certificate chain of trust?")
+    this_challenge.add_question("vocal", "What is confidentiality, integrity, and availablility mean in terms of security?")
+    
+    # TOPOLOGY
+    """
+    this should be pulled for a local file in the code base or ability to upload file
+    """
     this_challenge.print_challenge()
 
 

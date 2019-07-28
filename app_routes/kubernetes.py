@@ -2,15 +2,15 @@ import subprocess
 from subprocess import check_output
 import requests
 import json
-from app_controller_kubernetes import (
-    kubernetesGetPodId
-)
-from app_controller_docker import (
-    dockerGetContainerId
-)
 from flask_restful import reqparse,Resource
 
-from app_controller_challenges import (
+from app_controllers.infrastructure.kubernetes import (
+    kubernetesGetPodId
+)
+from app_controllers.infrastructure.docker import (
+    dockerGetContainerId
+)
+from app_controllers.challenges.challenges import (
     challengesManageChallenge1
 )
 

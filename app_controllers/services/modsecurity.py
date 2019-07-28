@@ -1,7 +1,7 @@
 import subprocess
 from subprocess import check_output
 import time
-from app_controller_nginx import (
+from ..services.nginx import (
     nginxGenerateConfig,
     nginxDeleteConfig,
 )

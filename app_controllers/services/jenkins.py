@@ -6,9 +6,9 @@ import json
 from subprocess import check_output
 import urllib
 import time
-from app_controller_docker import dockerGetContainerId
-from app_controller_kubernetes import kubernetesGetPodId
-from app_controller_gitlab import gitlabCreatePersonalAccessToken
+from ..infrastructure.docker import dockerGetContainerId
+from ..infrastructure.kubernetes import kubernetesGetPodId
+from ..services.gitlab import gitlabCreatePersonalAccessToken
 
 """
 1. deploy,service,ingress - done
@@ -125,7 +125,7 @@ def jenkinsCredentialsAddSSHPrivateKey(private_key):
     print(private_key_encoded)
     print(private_key_encoded_nl)
 
-    payload1 =  "_.scope=GLOBAL&_.username=&_.password=&_.id=&_.description=&stapler-class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&stapler-class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&%24class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&stapler-class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&%24class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&stapler-class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&%24class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&_.scope=GLOBAL&_.id=jenkins-charles-root-private-key&_.description=&_.username=jenkins&id270.privateKeySource=0\&\_.privateKey=\
+    payload1 =  "_.scope=GLOBAL&_.username=&_.password=&_.id=&_.description=&stapler-class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl&stapler-class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&%24class=org.jenkinsci.plugins.docker.commons.credentials.DockerServerCredentials&stapler-class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&%24class=com.dabsquared.gitlabjenkins.connection.GitLabApiTokenImpl&stapler-class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&%24class=com.microsoft.jenkins.kubernetes.credentials.KubeconfigCredentials&_.scope=GLOBAL&_.id=jenkins-charles-root-private-key&_.description=&_.username=jenkins&id270.privateKeySource=0\\&\\_.privateKey=\
         "+private_key_encoded+"\
             &stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey%24DirectEntryPrivateKeySource&_.passphrase=&stapler-class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&%24class=com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey&stapler-class=org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl&%24class=org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl&stapler-class=org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl&%24class=org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl&stapler-class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&%24class=com.cloudbees.plugins.credentials.impl.CertificateCredentialsImpl&json=%7B%22%22%3A+%224%22%2C+%22credentials%22%3A+%7B%22scope%22%3A+%22GLOBAL%22%2C+%22id%22%3A+%22jenkins-charles-root-private-key%22%2C+%22description%22%3A+%22%22%2C+%22username%22%3A+%22jenkins%22%2C+%22privateKeySource%22%3A+%7B%22value%22%3A+%220%22%2C+%22privateKey%22%3A+%22\
                 "+private_key_encoded_nl+"\

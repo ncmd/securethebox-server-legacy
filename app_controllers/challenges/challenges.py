@@ -1,7 +1,7 @@
 import subprocess
 from subprocess import check_output
 import time
-from app_controller_gitlab import (
+from ..services.gitlab import (
     gitlabGetResetPasswordToken, 
     gitlabPostResetPassword,
     gitlabCreatePersonalAccessToken,
@@ -12,7 +12,7 @@ from app_controller_gitlab import (
     gitlabProjectAllowOutbound,
     gitlabProjectAddDeployKey
 )
-from app_controller_jenkins import (
+from ..services.jenkins import (
     jenkinsConnectGitlab,
     jenkinsCreateJob,
     jenkinsCreateSSHKeypair,
@@ -23,10 +23,10 @@ from app_controller_jenkins import (
     jenkinsJobAddSourceCodeManagement,
     jenkinsRestartServer
 )
-from app_controller_docker import (
+from ..infrastructure.docker import (
     dockerGetContainerId
 )
-from app_controller_kubernetes import (
+from ..infrastructure.kubernetes import (
     kubernetesGetPodId,
     kubernetesGetPodStatus,
     kubernetesGenerateIngressYaml,
@@ -39,13 +39,13 @@ from app_controller_kubernetes import (
     kubernetesManagePods,
     kubernetesManageServicesPod,   
 )
-from app_controller_nginx import (
+from ..services.nginx import (
     nginxGenerateConfig,   
 )
-from app_controller_modsecurity import (
+from ..services.modsecurity import (
     modsecuritySetup
 )
-from app_controller_splunk import (
+from ..services.splunk import (
     splunkUniversalForwarderGenerateConfig,
     splunkUniversalForwarderDeleteConfig,
     splunkSetupUserPreferences,
@@ -54,17 +54,17 @@ from app_controller_splunk import (
     splunkSetupAddons,
     splunkSetupForwarderLogging,
 )
-from app_controller_attacker_kali_linux import (
+from ..red_team.attacker_kali_linux import (
     attackerSetupKaliLinux
 )
-from app_controller_utilities_cloudcmd import (
+from ..utilities.utilities_cloudcmd import (
     utilitiesSetupCloudcmd
 )
 
 def challengesManageChallenge1(clusterName, userName, action):
     print(action,"Challenge 1",clusterName,userName)
     if action == 'apply':
-        start = time.time()
+        # start = time.time()
         # # 1. Generate Yaml Ingress Files
         # kubernetesGenerateIngressYaml(clusterName, 'traefik')
         # # 2. Deploy Ingress Pods

@@ -5,7 +5,6 @@ from lxml import html
 import urllib
 import gitlab
 import datetime
-# from app_controller_jenkins import jenkinsGetSSHPublicKey
 
 """
 1. deploy,service,ingress ( ~100 seconds ) - done
@@ -25,7 +24,7 @@ def gitlabCreateProject(clusterName, userName):
     3. delete existing git
     4. commit,push to gitlab
     """
-    os.chdir('./apps')
+    os.chdir('../repositories')
     print("CWD:",os.getcwd())
     print("DELETING EXISTING PROJECT")
     subprocess.Popen([f"rm -rf juice-shop-"+userName],shell=True).wait()
@@ -109,7 +108,7 @@ def gitlabCreatePersonalAccessToken():
     # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
-    # print("User authenticity_token2:",authtoken2)
+    print("User authenticity_token2:",authtoken2)
     # 3
     url3 = "http://gitlab-charles.us-west1-a.securethebox.us/profile/personal_access_tokens"
     headers3 = {
@@ -178,7 +177,7 @@ def gitlabMakeProjectPublic(clusterName,userName):
     # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
-    # print("User authenticity_token2:",authtoken2)
+    print("User authenticity_token2:",authtoken2)
 
     # 3
     url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-"+userName+"/edit"
@@ -234,7 +233,7 @@ def gitlabProjectAllowOutbound(clusterName,userName):
     # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
-    # print("User authenticity_token2:",authtoken2)
+    print("User authenticity_token2:",authtoken2)
 
     # 3
     url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/admin/application_settings/network"
@@ -265,7 +264,7 @@ def gitlabProjectAllowOutbound(clusterName,userName):
     # title: jenkins-charles-root-public-key
     # enable write access
     # settings > Repository > Deploy keys
-    # 
+
 def gitlabProjectAddDeployKey(jenkins_public_key,clusterName,userName):
     url1 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/users/sign_in"
     response1 = requests.request("GET", url1)
@@ -290,7 +289,7 @@ def gitlabProjectAddDeployKey(jenkins_public_key,clusterName,userName):
     # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
-    # print("User authenticity_token2:",authtoken2)
+    print("User authenticity_token2:",authtoken2)
 
     # 3
     url3 = "http://gitlab-"+userName+"."+clusterName+".securethebox.us/root/juice-shop-charles/settings/repository"
@@ -349,7 +348,7 @@ def gitlabProjectAddWebhook(clusterName,userName):
     # print("User Session Cookie2:",session_cookie2)
     tree2 = html.fromstring(response2.content)
     authtoken2 = tree2.xpath('//input[@name="authenticity_token"]')
-    # print("User authenticity_token2:",authtoken2)
+    print("User authenticity_token2:",authtoken2)
     # print(response2.status_code)
 
     # 3
@@ -376,7 +375,7 @@ def gitlabProjectAddWebhook(clusterName,userName):
     # print("auth_token4",auth_token4)
     payload4 = "utf8=%E2%9C%93&authenticity_token="+auth_token4+"&hook%5Burl%5D=http%3A%2F%2Fjenkins-charles%3A8080%2Fproject%2Fdeploy-to-kubernetes&hook%5Btoken%5D=&hook%5Bpush_events%5D=0&hook%5Bpush_events%5D=1&hook%5Bpush_events_branch_filter%5D=&hook%5Btag_push_events%5D=0&hook%5Bnote_events%5D=0&hook%5Bconfidential_note_events%5D=0&hook%5Bissues_events%5D=0&hook%5Bconfidential_issues_events%5D=0&hook%5Bmerge_requests_events%5D=0&hook%5Bjob_events%5D=0&hook%5Bpipeline_events%5D=0&hook%5Bwiki_page_events%5D=0&hook%5Benable_ssl_verification%5D=0"
     response4 = requests.request("POST", url4, headers=headers4, data=payload4, allow_redirects=True)
-    # print("Response code:",response4.status_code)
+    print("Response code:",response4.status_code)
 
 def main():
     try:

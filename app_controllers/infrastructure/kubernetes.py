@@ -2,7 +2,6 @@ import subprocess
 import json
 from subprocess import check_output
 
-
 def kubernetesGetPodId(serviceName, userName):
     command = ["kubectl","get","pods","-o","go-template","--template","'{{range .items}}{{.metadata.name}}{{\"\\n\"}}{{end}}'"]
     # Command Output

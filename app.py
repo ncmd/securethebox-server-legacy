@@ -6,11 +6,10 @@ import json
 import requests
 import os
 
-from app_controller_api_kubernetes import (
-    apiKubernetes
+from app_routes.kubernetes import ( 
+    apiKubernetes 
 )
-
-from app_controller_api_solutions import (
+from app_routes.solutions import (
     apiSolutions
 )
 

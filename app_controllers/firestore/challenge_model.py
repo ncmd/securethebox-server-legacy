@@ -17,7 +17,7 @@ class Challenge(object):
         self.apps = []
         self.topology = {}
         self.resources = {}
-        self.questions = {}
+        self.questions = []
         self.submissions = {}
 
     def print_challenge(self):
@@ -66,79 +66,82 @@ class Challenge(object):
         self.topology = new_topology
     
     def add_resource(self, app_name, app_description, app_url, shell_url):
-        resources_size = len(self.resources)
-        self.resources[resources_size] = {
-                "name" : app_name,
+        self.resources[app_name] = {
                 "description" : app_description,
                 "app_url" : app_url, 
                 "shell_url" : shell_url,
                 "credentials" : {},
-                "references" : {},
-                "tips": {}
+                "references" : [],
+                "tips": []
             }
 
     # REFERENCES
-    def add_resource_reference(self, resource_index, reference_title, 
+    def add_resource_reference(self, resource_app_name, reference_title, 
                                reference_url):
         prev_resource = self.resources
-        references_size = len(prev_resource[resource_index]["references"])
-        prev_resource[resource_index]["references"][references_size] = {
-            reference_title : reference_url
-        }
+
+        prev_resource[resource_app_name]["references"].append(
+            {
+                "title": reference_title,
+                "url" : reference_url
+            }
+        )
         self.resources = prev_resource
 
-    def remove_resource_reference_by_index(self, target_resource_index):
-        prev_resource = self.resources[target_resource_index]
-        del prev_resource["references"][target_resource_index]
-        self.resources = prev_resource
+    # def remove_resource_reference_by_index(self, target_resource_index):
+    #     prev_resource = self.resources[target_resource_index]
+    #     del prev_resource["references"][target_resource_index]
+    #     self.resources = prev_resource
 
-    def remove_resource_by_index(self, target_index):
-        del self.resources[target_index]
+    # def remove_resource_by_index(self, target_index):
+    #     del self.resources[target_index]
 
     # CREDENTIALS
-    def add_resource_credential(self, target_resource_index, cred_user, 
+    def add_resource_credential(self, resource_app_name, cred_user, 
                                  cred_password):
-        prev_resource = self.resources[target_resource_index]
-        prev_resource["credentials"][0] = {
+        prev_resource = self.resources[resource_app_name]
+        prev_resource["credentials"] = {
             "user" : cred_user,
             "password" : cred_password
         }
-        self.resources[target_resource_index] = prev_resource
+        self.resources[resource_app_name] = prev_resource
 
-    def remove_resource_credential_by_index(self, target_resource_index):
-        prev_resource = self.resources[target_resource_index]
-        del prev_resource["credentials"][target_resource_index]
-        self.resources = prev_resource
+    # def remove_resource_credential_by_index(self, target_resource_index):
+    #     prev_resource = self.resources[target_resource_index]
+    #     del prev_resource["credentials"][target_resource_index]
+    #     self.resources = prev_resource
 
     # TIPS
-    def add_resource_tip(self, target_resource_index, new_tip):
-        prev_resource = self.resources[target_resource_index]
-        tips_size = len(prev_resource["tips"])
-        prev_resource["tips"][tips_size] = new_tip
-        self.resources[target_resource_index] = prev_resource
+    def add_resource_tip(self, resource_app_name, new_tip):
+        prev_resource = self.resources[resource_app_name]
+        prev_resource["tips"].append(new_tip)
+        self.resources[resource_app_name] = prev_resource
 
-    def remove_resource_tip_by_index(self, target_resource_index):
-        prev_resource = self.resources[target_resource_index]
-        del prev_resource["credentials"][target_resource_index]
-        self.resources = prev_resource
+    # def remove_resource_tip_by_index(self, target_resource_index):
+    #     prev_resource = self.resources[target_resource_index]
+    #     del prev_resource["credentials"][target_resource_index]
+    #     self.resources = prev_resource
 
     # QUESTIONS
     def add_question(self,question_type, question_details):
         questions_size = len(self.questions)
-        self.questions[questions_size] = {
+        self.questions.append(
+            {   
+                "id" : questions_size,
                 "type" : question_type,
                 "details" : question_details
             }
+        )
 
-    def edit_question_by_index(self,target_index,question_type, 
-                               question_details):
-        self.questions[target_index] = {
-                "type" : question_type,
-                "details" : question_details
-            }
+    # def edit_question_by_index(self,target_index,question_type, 
+    #                            question_details):
+    #     self.questions[target_index] = {
+    #             "type" : question_type,
+    #             "details" : question_details
+    #         }
 
-    def remove_question_by_index(self, target_index):
-        del self.questions[target_index]
+    # def remove_question_by_index(self, target_index):
+    #     del self.questions[target_index]
 
     # SUBMISSIONS
     def add_submission(self, question_number, question_type, question_answer):
@@ -156,9 +159,18 @@ class Challenge(object):
             "answer" : question_answer
         }
 
-    def remove_submission_by_index(self, target_submission_index):
-        del self.submissions[target_submission_index]
+    # def remove_submission_by_index(self, target_submission_index):
+    #     del self.submissions[target_submission_index]
 
+    def save_challenge(self,author, timestamp, action):
+        current_date = datetime.datetime.now()
+        self.change_history[current_date] = {}
+        change_history_current_date_size = len(self.change_history[current_date])
+        self.change_history[current_date][change_history_current_date_size] = {
+            "author" : author,
+            "timestamp" : timestamp,
+            "action" : action,
+        }
 
     def to_dict(self):
         this_dict = {
@@ -167,6 +179,7 @@ class Challenge(object):
             u'overview':self.overview,
             u'date_published':self.date_published,
             u'last_update':self.last_update,
+            u'change_history':self.change_history,
             u'difficulty':self.difficulty,
             u'tags':self.tags,
             u'category':self.category,

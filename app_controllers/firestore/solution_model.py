@@ -24,6 +24,3 @@ class Solution(object):
 
     def set_type(self, solution_type):
         self.type = solution_type
-    
-
-    

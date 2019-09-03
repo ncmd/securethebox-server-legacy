@@ -1,6 +1,7 @@
 import subprocess
 from subprocess import check_output
 import time
+import os 
 from ..services.gitlab import (
     gitlabGetResetPasswordToken, 
     gitlabPostResetPassword,
@@ -64,11 +65,16 @@ from ..utilities.utilities_cloudcmd import (
 def challengesManageChallenge1(clusterName, userName, action):
     print(action,"Challenge 1",clusterName,userName)
     if action == 'apply':
+        print("cwd:",os.getcwd())
+        currentPath  = os.getcwd()
+        os.chdir(currentPath+'/app_controllers/infrastructure')
+        print("cwd:",os.getcwd())
+        
         # start = time.time()
         # # 1. Generate Yaml Ingress Files
-        # kubernetesGenerateIngressYaml(clusterName, 'traefik')
+        kubernetesGenerateIngressYaml(clusterName, 'traefik')
         # # 2. Deploy Ingress Pods
-        # kubernetesManageIngressPod(clusterName, 'traefik', action)
+        kubernetesManageIngressPod(clusterName, 'traefik', action)
         # # 3. Generate Yaml Service Files
         # time.sleep(10)
         # # SETUP GITLAB
@@ -111,6 +117,9 @@ def challengesManageChallenge1(clusterName, userName, action):
         # end = time.time()
         # print("EVERYTHING SHOULD BE DONE! Time elapsed:",end - start)
 
+        
+        
+
         kubernetesGenerateServicesYaml(clusterName, 'nginx-modsecurity',userName)
         
         # kubernetesGenerateServicesYaml(clusterName, 'splunk',userName)
@@ -118,7 +127,7 @@ def challengesManageChallenge1(clusterName, userName, action):
         
         # # kubernetesGeneratePodsYaml(clusterName, 'kali-linux',userName)
         # # 4. Deploy Service pods
-        # kubernetesManageServicesPod(clusterName,'nginx-modsecurity', userName, action)
+        kubernetesManageServicesPod(clusterName,'nginx-modsecurity', userName, action)
         
         # kubernetesManageServicesPod(clusterName,'splunk', userName, action)
         # kubernetesManageServicesPod(clusterName,'splunk-universal-forwarder',userName, action)

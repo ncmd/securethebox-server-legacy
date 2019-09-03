@@ -2,14 +2,14 @@ import datetime
 import pprint
 
 class App(object):
-    def __init__(self, app_name, dockerhub_url, github_url):
-        self.app_name = app_name
-        self.dockerhub_url = dockerhub_url
-        self.github_url = github_url
+    def __init__(self):
+        self.app_name = "Untitled"
+        self.dockerhub_url = "https://hub.docker.com/r/username/appname"
+        self.github_url = "https://github.com/ncmd/securethebox"
         self.kubernetes_deployment_files = []
-        self.kubernetes_ingress_files = []
         self.kubernetes_service_files = []
-        self.kubernetes_configmap_files = [] # array
+        self.kubernetes_ingress_files = []
+        self.kubernetes_configmap_files = []
         self.kubernetes_bash_scripts = []
         self.kubernetes_python_scripts = []
 

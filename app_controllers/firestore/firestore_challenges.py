@@ -2,6 +2,8 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from challenge_model import Challenge
+from resource_model import Resource
+from step_model import Step
 import datetime
 
 # Use a service account
@@ -10,9 +12,18 @@ firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# def challenge_apps(app_list):
-#     for app in app_list:
-#         if app == ""
+"""
+Challenge consists of Steps
+Each Step contains:
+- Overview
+- Grading Critera
+- Scenario
+- Start Challenge
+- Resources
+- Submission
+- Scoring
+
+"""
 
 def challenge_1(username):
     this_challenge = Challenge("Learning the Environment","Simulated business environment supporting security for an Application")
@@ -24,23 +35,34 @@ def challenge_1(username):
     this_challenge.apps = ["juice-shop","splunk","nginx-modsecurity","gitlab","jenkins"]
     this_challenge.tags = ["interview","technical challenge","application security","infrastructure security"]
 
+    # Create Step for 'Overview'
+    step_overview_juice_shop = Step()
+    step_overview_juice_shop.add_title("Overview")
+    step_overview_juice_shop.add_block_of_text("This challenge assesses your skills in defending, responding, and preventing attacks against a web application.")
+    
+
+
     # JUICE-SHOP
-    juice_shop_app = "juice-shop"
-    this_challenge.add_resource(juice_shop_app,"Main Application and most Valueable service. Keep this service up at all times apply your knowledge of security.","http://juice-shop-"+username+".us-west1-a.securethebox.us/","http://juice-shop-"+username+"-cloudcmd.us-west1-a.securethebox.us/")
-    this_challenge.add_resource_credential(juice_shop_app,"admin@someemail.com","admin123")
-    this_challenge.add_resource_reference(juice_shop_app,"Juice-Shop Source Code Repository",'https://github.com/bkimminich/juice-shop')
-    this_challenge.add_resource_reference(juice_shop_app,"About Juice-Shop","https://www.owasp.org/index.php/OWASP_Juice_Shop_Project")
-    this_challenge.add_resource_reference(juice_shop_app,"Node-Vault node library","https://github.com/kr1sp1n/node-vault")
-    this_challenge.add_resource_reference(juice_shop_app,"Csurf CSRF token node library","https://github.com/expressjs/csurf")
-    this_challenge.add_resource_reference(juice_shop_app,"Content Security Policy (CSP) Cheatsheet","https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Content_Security_Policy_Cheat_Sheet.md")
-    this_challenge.add_resource_tip(juice_shop_app,"Frontend/Client = Angular.js")
-    this_challenge.add_resource_tip(juice_shop_app,"Backend/Server = Node.js+Express")
-    this_challenge.add_resource_tip(juice_shop_app,"Authentication = SQL+JWT")
-    this_challenge.add_resource_tip(juice_shop_app,"Change default passwords")
-    this_challenge.add_resource_tip(juice_shop_app,"Patch code in gitlab repository to fix vulnerabilities")
-    this_challenge.add_resource_tip(juice_shop_app,"Use Node-Vault library to request for secrets")
-    this_challenge.add_resource_tip(juice_shop_app,"Use CSurf middleware to add csrf token to requests")
-    this_challenge.add_resource_tip(juice_shop_app,"Change default passwords")
+    resource_app_name = "juice-shop"
+    resource_juice_shop = Resource()
+    resource_juice_shop.edit_app_name("juice-shop")
+    resource_juice_shop.edit_description("Main Application and most Valueable service. Keep this service up at all times apply your knowledge of security.")
+    resource_juice_shop.edit_url("http://"+resource_app_name+"-"+username+".us-west1-a.securethebox.us/")
+    resource_juice_shop.shell_url("http://"+resource_app_name+"-"+username+"-cloudcmd.us-west1-a.securethebox.us/")
+    resource_juice_shop.add_credential("admin user", "admin@someemail.com", "admin123")
+    resource_juice_shop.add_reference("Juice-Shop Source Code Repository","https://github.com/bkimminich/juice-shop")
+    resource_juice_shop.add_reference("About Juice-Shop","https://www.owasp.org/index.php/OWASP_Juice_Shop_Project")
+    resource_juice_shop.add_reference("Node-Vault node library","https://github.com/kr1sp1n/node-vault")
+    resource_juice_shop.add_reference("Csurf CSRF token node library","https://github.com/expressjs/csurf")
+    resource_juice_shop.add_reference("Content Security Policy (CSP) Cheatsheet","https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/Content_Security_Policy_Cheat_Sheet.md")
+    resource_juice_shop.add_tip("Frontend/Client = Angular.js")
+    resource_juice_shop.add_tip("Backend/Server = Node.js+Express")
+    resource_juice_shop.add_tip("Authentication = SQL+JWT")
+    resource_juice_shop.add_tip("Change default passwords")
+    resource_juice_shop.add_tip("Patch code in gitlab repository to fix vulnerabilities")
+    resource_juice_shop.add_tip("Use Node-Vault library to request for secrets")
+    resource_juice_shop.add_tip("Use CSurf middleware to add csrf token to requests")
+    resource_juice_shop.add_tip("Change default passwords")
 
     # SPLUNK
     splunk_app = "splunk"

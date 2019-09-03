@@ -1,6 +1,34 @@
 import datetime
 import pprint
 
+"""
+'id'     : '0',
+'title'  : 'Overview',
+'content': '<h1>Overview</h1>' +
+    '</br>This challenge assesses your skills in defending, responding, and preventing attacks against a web application.</li>' +
+    '</br></br>'+
+    '<ul>'+
+    '<li>You will be graded on a Blue Team Incident Response scenario.</li>' +
+    '<li>Time to complete this challenge is 2 hours.</li>' +
+    '<li>Results will be emailed to you.</li>' +
+    '<li>Candidates will demonstrate skill and experience with the following:</li><br/>'+
+    '<ul>'+
+    '<li>Linux CLI experience</li>'+
+    '<li>Web Application Pentesting & Defense</li>'+
+    '<li>Fullstack Development (Frontend/Backend/Database)</li>'+
+    '<li>Scripting with bash/python/go/ruby/etc. </li>'+
+    '<li>Reviewing code</li>'+
+    '<li>Working with Web Application Firewalls</li>'+
+    '<li>Analyzing log data with Splunk, ELK Stack, or classic Regular Expression techniques.</li>'+
+    '<li>Experience with packet inspection</li>'+
+    '<li>Creating YARA rules on Network/Host IDS/IPS</li>'+
+    '<li>Experience with Operating System/Network Forensics</li>'+
+    '</ul>'+
+    '</ul>' +
+    '<br/>' +   
+    '</br>'
+"""
+
 class Challenge(object):
     def __init__(self, title, description):
         self.title = title

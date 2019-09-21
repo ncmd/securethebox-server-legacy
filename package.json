@@ -4,7 +4,7 @@
   "description": "``` virtualenv venv virtualenv -p /Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7 venv source venv/bin/activate pip freeze > requirements.txt ```",
   "main": "index.js",
   "scripts": {
-    "commit": "git add --all && git commit -m \"Deploy\" && git push && heroku git:remote -a stb-server ; git add . ; git commit -m \"Deploy\" ; git push heroku master",
+    "commit": "git add --all && git cz && git push && heroku git:remote -a stb-server ; git add . ; git cz ; git push heroku master",
     "gg": "run-s gcloud0 gcloud1 gcloud2 gcloud3 gcloud4 gcloud5 gcloud6",
     "gcloud": "run-s gcloud0 gcloud1 gcloud2 gcloud3 gcloud4",
     "gcloudx": "echo y | gcloud container clusters delete \"us-west1-a\"",
@@ -24,11 +24,18 @@
     "heroku1": "heroku ps:scale web=1 ; heroku buildpacks:add https://github.com/ncmd/heroku-buildpack-google-cloud.git -a stb-server",
     "heroku2": "heroku config:set GOOGLE_CREDENTIALS=$(base64 ~/.kube/private.json) PROJECT=securethebox INSTALL_KUBECTL=true ZONE=us-west1-a -a stb-server",
     "heroku3": "if [ -f \"./t\" ]; then rm -rf ./t ; else touch t ; fi ; git add . ; git commit -m \"+t/-t\" ; git push heroku master",
-    "heroku4": "echo y | heroku ps:exec -a stb-server /bin/echo \"test\" ; heroku ps:exec -a stb-server /app/vendor/google-cloud-sdk/bin/gcloud container clusters get-credentials \"us-west1-a\""
+    "heroku4": "echo y | heroku ps:exec -a stb-server /bin/echo \"test\" ; heroku ps:exec -a stb-server /app/vendor/google-cloud-sdk/bin/gcloud container clusters get-credentials \"us-west1-a\"",
+    "lk-d": "kubectl delete po,svc,pv,pvc,deployment,configmap,replicaset,statefulset,ingress,secrets --all"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "cz-conventional-changelog": "3.0.2",
     "npm-run-all": "^4.1.5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

@@ -176,4 +176,4 @@ def challengesManageChallenge1(clusterName, userName, action):
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume.yml"],shell=True)
         subprocess.Popen([f"kubectl {action} -f ./kubernetes-deployments/storage/challenges/persistent-volume-claim.yml"],shell=True)
         # 6. Clean up the rest of environment (note this will close everything... do not do this in production)
-        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment,configmap,statefulset,ingress,secrets --all"],shell=True)
+        subprocess.Popen([f"kubectl delete po,svc,pv,pvc,deployment,configmap,replicaset,statefulset,ingress,secrets --all"],shell=True)

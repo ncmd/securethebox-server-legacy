@@ -12,6 +12,12 @@ from app_routes.kubernetes import (
 from app_routes.solutions import (
     apiSolutions
 )
+from app_routes.applications import (
+    apiApplications
+)
+from app_routes.challenges import (
+    apiChallenges
+)
 
 app = Flask(__name__)
 api = Api(app)
@@ -20,6 +26,8 @@ cors = CORS(app, resources={r"/*": {"origins": "*"}})
 # API Paths
 api.add_resource(apiKubernetes, '/api/kubernetes/challenges/<challenge_id>')
 api.add_resource(apiSolutions, '/api/solutions/challenges/<challenge_id>')
+api.add_resource(apiApplications, '/api/applications', '/api/applications/app/<app_id>')
+api.add_resource(apiChallenges, '/api/challenges')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -12,9 +12,19 @@ academy_parser.add_argument('courseHandle', help='{error_msg}')
 academy_parser.add_argument('data', help='{error_msg}')
 
 categories, courses = main()
-print(courses,categories)
+# print(courses,categories)
+
 
 # Challenges API
+
+class apiAcademyCourseCreate(Resource):
+    def post(self):
+        try:
+            return courses, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"} 
+        except:
+            return 404
+
+
 class apiAcademyCourses(Resource):
     def get(self):
         try:

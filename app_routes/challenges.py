@@ -3,6 +3,7 @@ from subprocess import check_output
 import requests
 import json
 from flask_restful import reqparse,Resource
+from initialize.academy import addCourse
 
 apps_parser = reqparse.RequestParser()
 apps_parser.add_argument('challenge', help='{error_msg}', type=dict, location='json')
@@ -16,8 +17,10 @@ class apiChallenges(Resource):
     '''
     def post(self):
         args = apps_parser.parse_args()
+        print(args['challenge'])
+        addCourse(args['challenge'])
         try:
-            return args, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
+            return args['challenge'], 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
         except:
             return args, 404
 

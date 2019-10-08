@@ -38,11 +38,6 @@ api.add_resource(apiChallenges, '/api/challenges')
 api.add_resource(apiAcademyCourses, '/api/academy-app/courses')
 api.add_resource(apiAcademyCourse, '/api/academy-app/course')
 api.add_resource(apiAcademyCategories, '/api/academy-app/categories')
-                #  '/api/academy-app/categories', 
-                #  '/api/academy-app/courses', 
-                #  '/api/academy-app/course',
-                #  '/api/academy-app/course/save',
-                #  '/api/academy-app/course/update')
-                 
+
 if __name__ == '__main__':
     app.run(debug=True)

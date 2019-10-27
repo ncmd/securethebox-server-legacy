@@ -2,7 +2,7 @@ import subprocess
 from subprocess import check_output
 import requests
 import json
-from flask_restful import reqparse,Resource
+from flask_restful import reqparse, Resource
 import yaml
 
 from app_controllers.creator.application import (
@@ -14,7 +14,18 @@ from app_controllers.creator.application import (
 
 
 app = Application()
-app.loadApplications(['nginx','haproxy', 'juice-shop', 'suricata', 'wazuh', 'elk', 'splunk'])
+app.loadApplications(
+    [
+        {'name': 'kubernetes', 'label': 'Kubernetes', 'category': 'infrastructure','category_label': 'Infrastructure'},
+        {'name': 'virtual_machine', 'label': 'Virtual Machine', 'category': 'infrastructure','category_label': 'Infrastructure'},
+        {'name': 'nginx', 'label': 'Nginx', 'category': 'load_balancer','category_label': 'Load Balancer'},
+        {'name': 'haproxy', 'label': 'HAProxy', 'category': 'load_balancer','category_label': 'Load Balancer'},
+        {'name': 'juice-shop', 'label': 'Juice Shop', 'category': 'application','category_label': 'Applications'},
+        {'name': 'suricata', 'label': 'Suricata', 'category': 'ids','category_label': 'IDS'},
+        {'name': 'wazuh', 'label': 'Wazuh', 'category': 'endpoint_security','category_label': 'Endpoint Security'},
+        {'name': 'elk', 'label': 'ELK', 'category': 'siem','category_label': 'SIEM'},
+        {'name': 'splunk', 'label': 'Splunk', 'category': 'siem','category_label': 'SIEM'}, 
+    ])
 
 apps_parser = reqparse.RequestParser()
 apps_parser.add_argument('yamlData', help='{error_msg}')
@@ -23,12 +34,15 @@ apps_parser.add_argument('yamlData', help='{error_msg}')
 # apps_parser.add_argument('yamlDataService', help='{error_msg}')
 
 # Apps API
+
+
 class apiApplications(Resource):
     '''
     REQUEST:    POST
     URI:        https://securethebox.us/api/apps
     PAYLOAD:    { yamlData:  }
     '''
+
     def post(self, app_id):
         args = apps_parser.parse_args()
         try:
@@ -42,13 +56,13 @@ class apiApplications(Resource):
             # generateDeploymentYaml(yData)
             # generateIngressYaml(args['yamlDataIngress'])
             # generateServiceYaml(args['yamlDataService'])
-            return args, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
+            return args, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"}
         except:
             return args, 404
 
     # Get Apps list
     def get(self):
         try:
-            return app.getApplicationList(), 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
+            return app.getApplicationList(), 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"}
         except:
             return 404

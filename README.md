@@ -230,3 +230,10 @@ server {
     }
 }
 ```
+
+## Tiller and Helm commands
+```
+helm list --host="localhost:44134"
+
+helm delete quarrelsome-umbrellabird --purge --host="localhost:44134"
+```

@@ -20,7 +20,7 @@ categories, courses = main()
 class apiAcademyCourseCreate(Resource):
     def post(self):
         try:
-            return courses, 201 ,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"} 
+            return courses, 201 , {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"} 
         except:
             return 404
 

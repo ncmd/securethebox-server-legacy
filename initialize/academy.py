@@ -4,6 +4,7 @@ from app_controllers.academy.courses import Courses
 from app_controllers.academy.course import Course
 from app_controllers.academy.steps import Steps
 from app_controllers.academy.step import Step
+import uuid
 
 category1 = Category()
 category2 = Category()
@@ -41,20 +42,21 @@ courses = Courses()
 courses.addCourse(course1.to_dict())
 
 def addCourse(course_payload):
-    # print("COURSE PAYLOAD",course_payload['steps'])
+    print("COURSE PAYLOAD",course_payload['steps'])
     course2 = Course()
     steps = Steps()
     
     for x in course_payload["steps"]:
         print(x)
         step = Step()
+        
         step.setStep(x["id"], x["title"], x["content"])
         steps.addStep(step.to_dict())
     
     course2.setCourse(
-        course_payload["id"],
+        str(uuid.uuid4()),
         course_payload["title"],
-        course_payload["slug"],
+        course_payload["title"].lower().replace(" ","-"),
         course_payload["description"],
         course_payload["category"],
         course_payload["length"],

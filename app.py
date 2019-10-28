@@ -24,6 +24,12 @@ from app_routes.academy import (
     apiAcademyCategories,
 )
 
+from app_routes.applications import (
+    apiApplicationsQueryHelmChart,
+    apiApplicationsSaveHelmChart,
+    apiApplicationsGetCategories
+)
+
 
 app = Flask(__name__)
 api = Api(app)
@@ -38,6 +44,10 @@ api.add_resource(apiChallenges, '/api/challenges')
 api.add_resource(apiAcademyCourses, '/api/academy-app/courses')
 api.add_resource(apiAcademyCourse, '/api/academy-app/course')
 api.add_resource(apiAcademyCategories, '/api/academy-app/categories')
+
+api.add_resource(apiApplicationsQueryHelmChart, '/api/applications/query')
+api.add_resource(apiApplicationsSaveHelmChart, '/api/applications/save')
+api.add_resource(apiApplicationsGetCategories, '/api/applications/categories')
 
 if __name__ == '__main__':
     app.run(debug=True)

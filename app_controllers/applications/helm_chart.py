@@ -6,7 +6,7 @@ Relies on PyHelm https://github.com/flaper87/pyhelm
 Clones repos in securethebox organization
 https://github.com/securethebox
 
-securethebox org repos should contain all the helm charts
+securethebox org repos should contain all the helm charts 
 
 """
 from pyhelm.chartbuilder import ChartBuilder
@@ -14,10 +14,15 @@ from pyhelm.tiller import Tiller
 import yaml 
 import subprocess
 import re
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+import pprint
 
 class HelmChart:
     def __init__(self):
-        self.helm_name = ""
+        self.chart_name = ""
         self.source_type = ""
         self.source_location = ""
         self.tiller_host = ""
@@ -25,10 +30,12 @@ class HelmChart:
         self.release_name = ""
         self.releaseNamespaceDict = {}
         self.chartReleaseNameDict = {}
+        self.chart = ""
+        self.values_yaml = ""
 
     # internal chart name
     def setName(self, name):
-        self.helm_name = name
+        self.chart_name = name
 
     # git, dir
     def setType(self,type):
@@ -46,21 +53,52 @@ class HelmChart:
     def setNamespace(self, namespace):
         self.kubernetes_namespace = namespace
 
-    # install helm chart
+    # load helm chart
     def loadChart(self):
-        tiller = Tiller(self.tiller_host)
         chart = ChartBuilder(
-            {"name": self.helm_name, 
+            {"name": self.chart_name, 
              "source": {
                  "type": self.source_type, 
                  "location": self.source_location
                  }
             })
+        self.setChart(chart.get_helm_chart())
+        
+    def setChart(self, chart):
+        self.chart = chart
+        
+    def getChartValuesYaml(self):
+        # length_lines = len(str(self.chart).split('\n'))
+        chart_lines = str(self.chart).splitlines()
+        for index, value in enumerate(chart_lines):
+            if "values {" in value:
+                # REMEMBER TO REPLACE \n WITH \\n when we convert it back to RAW
+                raw_yaml = chart_lines[index+1].split("raw: ",1)[1][1:][:-1].replace('\\n','\n')
+                load_yaml = str(raw_yaml)
+                return load_yaml
+
+    # update the values section within chart
+    def setChartValuesYaml(self,new_values):
+        # Find line need to replace
+        chart_lines = str(self.chart).splitlines()
+        for index, value in enumerate(chart_lines):
+            if "values {" in value:
+                # REMEMBER TO REPLACE \n WITH \\n when we convert it back to RAW
+                prev_values = chart_lines[index+1]
+                chart_lines[index+1] = chart_lines[index+1].replace(prev_values, new_values.replace('\n','\\n'))
+        self.chart = '\n'.join(chart_lines)
+        print(self.chart)
+
+    # Save chart to Firebase/Firestore
+
+    # install helm chart
+    def installChart(self):
+        tiller = Tiller(self.tiller_host)
         tiller.install_release(
-            chart.get_helm_chart(), 
+            self.chart, 
             dry_run=False, 
             namespace=self.kubernetes_namespace)
-    
+
     # matches all deployed helm charts to repective namespace
     def loadReleasesForNamespaceDict(self):
         tiller = Tiller(self.tiller_host)
@@ -95,17 +133,21 @@ class HelmChart:
 
     def deleteChart(self):
         subprocess.Popen([f"helm delete {self.release_name} --purge --host=\"{self.tiller_host}:44134\""],shell=True).wait()
+    
+    def getChart(self):
+        return self.chart
 
 if __name__ == "__main__":
     hc = HelmChart()
     hc.setName("defectdojo")
     hc.setType("git")
     hc.setHost("localhost")
-    
     # Ideally each user should have their own namespace
     hc.setNamespace("default")
     hc.setLocation("https://github.com/securethebox/defectdojo.git")
     hc.loadChart()
-    hc.listCharts()
-    hc.loadReleasesForNamespaceDict()
-    hc.deleteAllReleasesForNamespace("default")
+    hc.getChartValuesYaml()
+    hc.setChartValuesYaml("  raw: \"🔥🔥🔥🔥🔥🔥🔥🔥🔥\"")
+    # hc.listCharts()
+    # hc.loadReleasesForNamespaceDict()
+    # hc.deleteAllReleasesForNamespace("default")

@@ -11,7 +11,9 @@ from app_controllers.creator.application import (
     generateIngressYaml,
     generateServiceYaml,
 )
-
+from app_controllers.applications.helm_chart import (
+    HelmChart
+)
 
 app = Application()
 app.loadApplications(
@@ -29,12 +31,63 @@ app.loadApplications(
 
 apps_parser = reqparse.RequestParser()
 apps_parser.add_argument('yamlData', help='{error_msg}')
-# apps_parser.add_argument('yamlDataDeployment', help='{error_msg}')
-# apps_parser.add_argument('yamlDataIngress', help='{error_msg}')
-# apps_parser.add_argument('yamlDataService', help='{error_msg}')
 
 # Apps API
+class apiApplicationsQueryHelmChart(Resource):
+     def post(self):
+        args = apps_parser.parse_args()
+        yd = args['yamlData']
+        yData = yaml.safe_load(yd)
+        hc = HelmChart()
+        hc.setName(yData['name'])
+        hc.setType("git")
+        hc.setHost("localhost")
+        # Ideally each user should have their own namespace
+        hc.setNamespace("default")
+        hc.setLocation(yData['url'])
+        hc.loadChart()
+        responsedata = hc.getChartValuesYaml()
+        try:
+            return responsedata, 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"}
+        except:
+            return args, 404
 
+class apiApplicationsGetCategories(Resource):
+     def get(self):
+        args = apps_parser.parse_args()
+        try:
+            return app.getCategories(), 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "GET"}
+        except:
+            return args, 404
+
+# Save Helm Chart should add to the list of Applications
+class apiApplicationsSaveHelmChart(Resource):
+     def post(self):
+        args = apps_parser.parse_args()
+        yd = args['yamlData']
+        yData = yaml.safe_load(yd)
+        hc = HelmChart()
+        hc.setName(yData['name'])
+        hc.setType("git")
+        hc.setHost("localhost")
+        # Ideally each user should have their own namespace
+        hc.setNamespace("default")
+        hc.setLocation(yData['url'])
+        hc.loadChart()
+        hc.setChartValuesYaml("  raw: \""+yData['chart']+"\"")
+
+        app.addApplication(
+            {
+                'name': yData['name'],
+                'label': yData['name'].capitalize(),
+                'category': 'infrastructure',
+                'category_label': 'Infrastructure'
+            }
+        )
+        try:
+            return "chart was added", 201,  {'Access-Control-Allow-Origin': '*', "Access-Control-Allow-Methods": "POST"}
+        except:
+            return args, 404
 
 class apiApplications(Resource):
     '''
@@ -42,7 +95,6 @@ class apiApplications(Resource):
     URI:        https://securethebox.us/api/apps
     PAYLOAD:    { yamlData:  }
     '''
-
     def post(self, app_id):
         args = apps_parser.parse_args()
         try:

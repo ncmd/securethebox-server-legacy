@@ -1,15 +1,40 @@
 # securethebox-server
-# This App Setup
+# Requirements:
+- python3.7.x
+- npm 6.x
+- nodejs 12.x
+
+# How to make changes to this repo
+- Refer to this repo https://github.com/ncmd/git-scripted
+
+# Dev Setup
+- Install nodejs tools
 ```
-virtualenv venv
-virtualenv -p /Library/Frameworks/Python.framework/Versions/3.7/bin/python3.7 venv
-source venv/bin/activate
-pip freeze > requirements.txt
-pip install -r requirements.txt
+npm install -g cross-var
+npm install -g commitizen
+npm install -g npm-run-all
 ```
 
-- Clusters should not be created automatically
-- Pods can are created automatically
+- Install Python Dependencies
+```
+pip3 install virtualenv
+python3 -m venv 
+. venv/bin/activate
+pip3 install -r requirements.txt
+python3 app.py
+```
+
+# Updating App
+- Merge origin master with fork master
+```
+npm run sync-fork-master
+```
+- Updating local fork master
+```
+npm run sync
+```
+
+
 
 # Kubernetes Cluster Setup
 **Create Kubernetes cluster**

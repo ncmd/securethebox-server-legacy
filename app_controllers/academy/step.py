@@ -3,6 +3,7 @@ class Step(object):
         self.id = ''
         self.title = ''
         self.content = ''
+        self.stepDict = {}
 
     def setStep(self,cid,title,content):
         self.id = cid
@@ -16,3 +17,4 @@ class Step(object):
             u'content':self.content
         }
         return this_dict
+        

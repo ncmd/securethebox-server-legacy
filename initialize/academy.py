@@ -22,12 +22,8 @@ categories.addCategory(category4.to_dict())
 
 course1 = Course()
 steps = Steps()
-step1 = Step()
-step1.setStep('0', 'Overview', '<h1>Overview</h1>')
-step2 = Step()
-step2.setStep('1', 'Overview', '<h1>2</h1>')
-steps.addStep(step1.to_dict())
-steps.addStep(step2.to_dict())
+steps.addStep({'id':'1', 'title':'Overview', 'content':'<h1>1</h1>'})
+steps.addStep({'id':'1', 'title':'Overview', 'content':'<h1>2</h1>'})
 course1.setCourse(
     '15459251a6d6b397565',
     'Challenge 1',
@@ -42,16 +38,11 @@ courses = Courses()
 courses.addCourse(course1.to_dict())
 
 def addCourse(course_payload):
-    print("COURSE PAYLOAD",course_payload['steps'])
     course2 = Course()
-    steps = Steps()
+    step1 = Steps()
     
     for x in course_payload["steps"]:
-        print(x)
-        step = Step()
-        
-        step.setStep(x["id"], x["title"], x["content"])
-        steps.addStep(step.to_dict())
+        step1.addStep(x)
     
     course2.setCourse(
         str(uuid.uuid4()),
@@ -62,7 +53,7 @@ def addCourse(course_payload):
         course_payload["length"],
         course_payload["totalSteps"],
         course_payload["activeStep"],
-        steps.getSteps())
+        step1.getSteps())
     courses.addCourse(course2.to_dict())
 
 

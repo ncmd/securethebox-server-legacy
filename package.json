@@ -7,6 +7,7 @@
     "commit-m": "git checkout master && git add --all && git cz && export CURRENTBRANCH=$(git branch | grep \\* | cut -d ' ' -f2) && git push",
     "commit-b": "git add --all && git cz && export CURRENTBRANCH=$(git branch | grep \\* | cut -d ' ' -f2) && git push --set-upstream origin $CURRENTBRANCH && cross-var \"open https://github.com/ncmd/securethebox-server/compare/master...ncmd:$npm_package_config_b?expand=1\"",
     "sync": "git checkout master ; git pull",
+    "sync-fork-master": "git remote add upstream https://github.com/ncmd/securethebox-server.git ; git fetch upstream ; git checkout master ; git merge upstream/master ",
     "commit": "git add --all && git cz && git push && heroku git:remote -a stb-server ; git add . ; git cz ; git push heroku master",
     "gg": "run-s gcloud0 gcloud1 gcloud2 gcloud3 gcloud4 gcloud5 gcloud6",
     "gcloud": "run-s gcloud0 gcloud1 gcloud2 gcloud3 gcloud4",

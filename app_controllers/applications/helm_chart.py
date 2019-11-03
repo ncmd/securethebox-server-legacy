@@ -8,6 +8,8 @@ https://github.com/securethebox
 
 securethebox org repos should contain all the helm charts 
 
+required a tiller service to connect to which should be listening on port 44134
+
 """
 from pyhelm.chartbuilder import ChartBuilder
 from pyhelm.tiller import Tiller

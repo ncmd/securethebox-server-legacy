@@ -35,7 +35,6 @@ npm run sync
 ```
 
 
-
 # Kubernetes Cluster Setup
 **Create Kubernetes cluster**
 ```

@@ -8,19 +8,23 @@ https://github.com/securethebox
 
 securethebox org repos should contain all the helm charts 
 
-required a tiller service to connect to which should be listening on port 44134
+Required a tiller service to connect to which should be listening on port 44134
 
 """
 from pyhelm.chartbuilder import ChartBuilder
 from pyhelm.tiller import Tiller
+import pyhelm.logger as logger
+
+from hapi.services.tiller_pb2 import GetReleaseContentRequest
+from hapi.chart.template_pb2 import Template
+from hapi.chart.chart_pb2 import Chart
+from hapi.chart.metadata_pb2 import Metadata
+from hapi.chart.config_pb2 import Config
+from supermutes.dot import dotify
+
 import yaml 
 import subprocess
 import re
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import StringIO
-import pprint
 
 class HelmChart:
     def __init__(self):
@@ -33,7 +37,7 @@ class HelmChart:
         self.releaseNamespaceDict = {}
         self.chartReleaseNameDict = {}
         self.chart = ""
-        self.values_yaml = ""
+        self.chartValuesYaml = ""
 
     # internal chart name
     def setName(self, name):
@@ -68,7 +72,36 @@ class HelmChart:
         
     def setChart(self, chart):
         self.chart = chart
+
+    def parseChart(self):
+        yamlstring = str(self.chart).replace('\\n','\n')
+        print(yamlstring)
         
+    def getvalues(self):
+        chart = ChartBuilder(
+            {"name": self.chart_name, 
+             "source": {
+                 "type": self.source_type, 
+                 "location": self.source_location
+                 }
+            })
+        rawstring = chart.get_values()
+        v = str(str(rawstring).split("raw: ",1)[1][1:][:-2].replace("\\n","\n"))
+        ydata = yaml.safe_load(v)
+        
+        return ydata
+
+    def getfiles(self):
+        chart = ChartBuilder(
+            {"name": self.chart_name, 
+             "source": {
+                 "type": self.source_type, 
+                 "location": self.source_location
+                 }
+            })
+        return chart.get_files()
+        # print()
+
     def getChartValuesYaml(self):
         # length_lines = len(str(self.chart).split('\n'))
         chart_lines = str(self.chart).splitlines()
@@ -77,21 +110,58 @@ class HelmChart:
                 # REMEMBER TO REPLACE \n WITH \\n when we convert it back to RAW
                 raw_yaml = chart_lines[index+1].split("raw: ",1)[1][1:][:-1].replace('\\n','\n')
                 load_yaml = str(raw_yaml)
-                return load_yaml
+                self.chartValuesYaml = yaml.safe_load(load_yaml)
+                return self.chartValuesYaml
 
     # update the values section within chart
     def setChartValuesYaml(self,new_values):
         # Find line need to replace
+        print(type(self.chart))
         chart_lines = str(self.chart).splitlines()
         for index, value in enumerate(chart_lines):
             if "values {" in value:
                 # REMEMBER TO REPLACE \n WITH \\n when we convert it back to RAW
-                prev_values = chart_lines[index+1]
+                prev_values = chart_lines[index+1].split("raw: ",1)[1][1:][:-1].replace('\\n','\n')
+                # print(yaml.safe_load(prev_values))
                 chart_lines[index+1] = chart_lines[index+1].replace(prev_values, new_values.replace('\n','\\n'))
-        self.chart = '\n'.join(chart_lines)
-        print(self.chart)
 
-    # Save chart to Firebase/Firestore
+        
+        self.chart = '\n'.join(chart_lines)
+
+    def createChart(self):
+        chart = ChartBuilder(
+            {"name": self.chart_name, 
+             "source": {
+                 "type": self.source_type, 
+                 "location": self.source_location
+                 }
+            })
+
+        rawstring = chart.get_values()
+        v = str(str(rawstring).split("raw: ",1)[1][1:][:-2].replace("\\n","\n"))
+        ydata = yaml.safe_load(v)    
+        # print(ydata)
+        ydata["host"] = "this.is.lit.local"
+        newyaml = yaml.safe_dump(ydata)
+        rawl = Config(raw=newyaml)
+
+        dependencies = []
+
+        
+        helm_chart = Chart(
+            metadata=chart.get_metadata(),
+            templates=chart.get_templates(),
+            dependencies=dependencies,
+            values=rawl,
+            files=chart.get_files(),
+        )
+        self.chart = helm_chart
+
+        tiller = Tiller(self.tiller_host)
+        tiller.install_release(
+            self.chart, 
+            dry_run=False, 
+            namespace=self.kubernetes_namespace)
 
     # install helm chart
     def installChart(self):
@@ -148,8 +218,15 @@ if __name__ == "__main__":
     hc.setNamespace("default")
     hc.setLocation("https://github.com/securethebox/defectdojo.git")
     hc.loadChart()
-    hc.getChartValuesYaml()
-    hc.setChartValuesYaml("  raw: \"🔥🔥🔥🔥🔥🔥🔥🔥🔥\"")
+    # hc.createChart()
+    # hc.getvalues()
+    # valuesyaml = hc.getChartV aluesYaml()
+    # ydata = yaml.safe_load(valuesyaml)
+    # valuesyaml["host"] = "testing🔥🔥🔥"
+    # newyaml = yaml.safe_dump(valuesyaml)
+    # hc.setChartValuesYaml(newyaml)
+    # hc.installChart()
+    # hc.setChartValuesYaml("  raw: \"🔥🔥🔥🔥🔥🔥🔥🔥🔥\"")
     # hc.listCharts()
-    # hc.loadReleasesForNamespaceDict()
-    # hc.deleteAllReleasesForNamespace("default")
+    hc.loadReleasesForNamespaceDict()
+    hc.deleteAllReleasesForNamespace("default")

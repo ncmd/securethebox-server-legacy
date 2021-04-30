@@ -36,5 +36,5 @@ sgqlc==8.1
 six==1.12.0
 smmap2==2.0.5
 supermutes==0.2.5
-urllib3==1.25.6
+urllib3==1.25.8
 Werkzeug==0.15.2

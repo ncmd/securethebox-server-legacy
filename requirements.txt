@@ -18,7 +18,7 @@ idna==2.8
 itsdangerous==1.1.0
 Jinja2==2.10.1
 jmespath==0.9.4
-lxml==4.4.1
+lxml==4.6.5
 MarkupSafe==1.1.1
 promise==2.2.1
 protobuf==3.10.0
